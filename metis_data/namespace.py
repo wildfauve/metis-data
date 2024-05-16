@@ -6,60 +6,42 @@ from metis_data.repo import sql_builder, properties
 from . import config
 
 
-class NamingConventionProtocol(Protocol):
-
-    def namespace_name(self) -> str:
-        """
-        The database name is provide in the dbconfig section of the runner config.  This function returns that name.
-        :return:
-        """
+class CatalogueStrategyProtocol(Protocol):
+    def create(self, props, if_not_exists=True):
         ...
 
-    def table_name(self, table_name) -> str:
-        """
-        This function combines the database name and the provided table name.
-
-        Used when using hive-based operations; like drop table, or spark.table(db_table_name("t1")
-
-        Used by:
-        + HiveTableReader().read
-        + HiveRepo().drop_table_by_name
-        + HiveRepo().read_stream
-        + HiveRepo().create
-        + HiveRepo().get_table_properties
-        + HiveRepo().add_to_table_properties
-        + HiveRepo().remove_from_table_properties
-
-        :param table_name:
-        :return:
-        """
+    def drop(self):
         ...
 
-    def catalogue(self) -> str:
-        """
-        """
+    @property
+    def namespace_name(self):
         ...
 
-    def data_product_name(self) -> str:
-        """
-        """
+    @property
+    def catalogue(self):
         ...
 
-    def fully_qualified_name(self, table_name: str) -> str:
-        """
-        """
+    @property
+    def data_product_name(self):
         ...
 
+    def fully_qualified_name(self, table_name):
+        ...
+
+    @property
+    def checkpoint_name(self):
+        ...
+
+    @property
     def data_product_root(self) -> str:
-        """
-        Used by List tables.  Which is in turn used to determine if a table
-        exists in a name space
-        :return:
-        """
+        ...
+
+    @property
+    def checkpoint_volume(self) -> str:
         ...
 
 
-class SparkCatalogueStrategy:
+class SparkCatalogueStrategy(CatalogueStrategyProtocol):
     """
     """
 
@@ -68,58 +50,82 @@ class SparkCatalogueStrategy:
         self.cfg = cfg
 
     def create(self, props, if_not_exists=True):
-        self.session.sql(sql_builder.create_db(db_name=self.namespace_name(),
+        self.session.sql(sql_builder.create_db(db_name=self.namespace_name,
                                                db_property_expression=props))
         return self
 
     def drop(self):
-        self.session.sql(f"drop database IF EXISTS {self.namespace_name()} CASCADE")
+        self.session.sql(f"drop database IF EXISTS {self.namespace_name} CASCADE")
         return self
 
+    @property
     def namespace_name(self):
         return self.cfg.data_product
 
+    @property
     def catalogue(self):
         return self.cfg.catalogue
 
+    @property
     def data_product_name(self):
         return self.cfg.data_product
 
     def fully_qualified_name(self, table_name):
-        return f"{self.namespace_name()}.{table_name}"
+        return f"{self.namespace_name}.{table_name}"
 
+    @property
+    def checkpoint_name(self):
+        return self.cfg.checkpoint_name
+
+    @property
     def data_product_root(self) -> str:
-        return self.namespace_name()
+        return self.namespace_name
+
+    @property
+    def checkpoint_volume(self) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name}"
 
 
-class UnityCatalogueStrategy:
+class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def __init__(self, session, cfg: config.Config):
         self.session = session
         self.cfg = cfg
 
     def create(self, props, if_not_exists=True):
-        self.session.sql(sql_builder.create_db(db_name=self.namespace_name(),
+        self.session.sql(sql_builder.create_db(db_name=self.namespace_name,
                                                db_property_expression=props))
         return self
 
     def drop(self):
-        self.session.sql(f"drop database IF EXISTS {self.namespace_name()} CASCADE")
+        self.session.sql(f"drop database IF EXISTS {self.namespace_name} CASCADE")
         return self
 
+    @property
     def namespace_name(self):
         return self.cfg.data_product
 
+    @property
     def catalogue(self):
         return self.cfg.catalogue
 
+    @property
     def data_product_name(self):
         return self.cfg.data_product
 
-    def fully_qualified_name(self, table_name):
-        return f"{self.catalogue()}.{self.namespace_name()}.{table_name}"
+    @property
+    def checkpoint_name(self):
+        return self.cfg.checkpoint_name
 
+    def fully_qualified_name(self, table_name):
+        return f"{self.catalogue}.{self.namespace_name}.{table_name}"
+
+    @property
     def data_product_root(self) -> str:
-        return f"{self.catalogue()}.{self.namespace_name()}"
+        return f"{self.catalogue}.{self.namespace_name}"
+
+    @property
+    def checkpoint_volume(self) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name}"
 
 
 class NameSpace:
@@ -141,6 +147,8 @@ class NameSpace:
         self.create_if_not_exists()
 
     def determine_naming_convention(self):
+        if self.cfg.namespace_strategy_cls:
+            return self.cfg.namespace_strategy_cls(self.session, self.cfg)
         match self.cfg.catalogue_mode:
             case config.CatalogueMode.SPARK:
                 return SparkCatalogueStrategy(self.session, self.cfg)
@@ -163,7 +171,7 @@ class NameSpace:
         return self.catalogue_strategy.fully_qualified_name(table_name)
 
     def namespace_exists(self) -> bool:
-        return self.session.catalog.databaseExists(self.catalogue_strategy.namespace_name())
+        return self.session.catalog.databaseExists(self.catalogue_strategy.namespace_name)
 
     def table_exists(self, table_name):
         return table_name in self.list_tables()
@@ -172,7 +180,7 @@ class NameSpace:
         return self.session.catalog.tableExists(table_name)
 
     def list_tables(self):
-        return [table.name for table in self.session.catalog.listTables(self.catalogue_strategy.data_product_root())]
+        return [table.name for table in self.session.catalog.listTables(self.catalogue_strategy.data_product_root)]
 
     def table_format(self):
         return self.cfg.db.table_format

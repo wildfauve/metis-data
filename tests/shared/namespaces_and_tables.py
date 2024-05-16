@@ -2,6 +2,8 @@ import pytest
 import metis_data
 from pyspark.sql import types as T
 
+from metis_data import namespace
+
 from . import *
 from . import di
 
@@ -40,18 +42,20 @@ def namespace_wrapper():
 
 @pytest.fixture
 def dataproduct1_ns():
-    cfg, namespace = dp1_cfg_ns()
+    cfg, ns = dp1_cfg_ns()
 
-    yield namespace
+    yield ns
 
-    namespace.drop()
+    ns.drop()
 
 
 def dp1_cfg_ns():
     config = metis_data.Config(catalogue="testDomain",
                                data_product="dp1",
                                service_name="test-runner",
-                               catalogue_mode=metis_data.CatalogueMode.SPARK)
+                               catalogue_mode=metis_data.CatalogueMode.SPARK,
+                               checkpoint_name="checkpoints",
+                               namespace_strategy_cls=TestingSparkCatalogueStrategy)
 
     namespace = metis_data.NameSpace(session=spark_test_session.spark_session(),
                                      cfg=config)
@@ -78,6 +82,17 @@ def my_table_cls():
             return f"{name_of_baseline}.id = {update_name}.id"
 
     return MyTable
+
+
+class TestingSparkCatalogueStrategy(namespace.SparkCatalogueStrategy):
+
+    def __init__(self, session, cfg):
+        super().__init__(session, cfg)
+
+    @property
+    def checkpoint_volume(self) -> str:
+        return f"tests/spark_locations/{self.checkpoint_name}"
+
 
 
 class MyTable2(metis_data.DomainTable):

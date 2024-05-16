@@ -2,18 +2,21 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from metis_data.util import error
+from metis_data import namespace
 
 normalise_pattern = pattern = re.compile(r'(?<!^)(?=[A-Z])')
+
 
 def normalise(token):
     if not token:
         return token
     return normalise_pattern.sub('_', token).lower()
 
+
 class CatalogueMode(Enum):
     SPARK = "spark"
     UNITY = "unity"
+
 
 @dataclass
 class Config:
@@ -21,11 +24,10 @@ class Config:
     data_product: str
     service_name: str
     catalogue_mode: CatalogueMode = field(default_factory=lambda: CatalogueMode.UNITY)
-    checkpoint_location: str | None = None
+    checkpoint_name: str | None = None
+    namespace_strategy_cls: namespace.CatalogueStrategyProtocol | None = None
 
     def __post_init__(self):
         self.catalogue = normalise(self.catalogue)
         self.service_name = normalise(self.service_name)
         self.data_product = normalise(self.data_product)
-
-
