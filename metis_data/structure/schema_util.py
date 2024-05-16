@@ -9,7 +9,7 @@ from pyspark.sql.types import (
     TimestampType,
     BooleanType)
 
-from metis_job.structure import vocab_util as V
+from metis_data.structure import vocab_util as V
 
 common_vocab = {
     "*":

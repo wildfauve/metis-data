@@ -5,7 +5,7 @@ from uuid import uuid4
 from pyspark.sql import dataframe
 
 from . import value
-from metis_job.util import error, monad
+from metis_data.util import error, monad
 
 
 class SimpleJob:

@@ -1,5 +1,5 @@
 from typing import Callable, List, Set
-from metis_job import repo
+from metis_data import repo
 
 
 # def run(from_table: Callable,

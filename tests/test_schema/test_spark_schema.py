@@ -1,8 +1,8 @@
 import pytest
 
 from pyspark.sql.types import DecimalType, StringType
-from metis_job import schema as S
-from metis_job.util import error
+from metis_data import schema as S
+from metis_data.util import error
 
 from tests.shared import vocab
 

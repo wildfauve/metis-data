@@ -1,23 +1,23 @@
-import metis_job
+import metis_data
 
 from tests.shared import data, namespaces_and_tables
 
 
 def test_build_property_from_urn_strings():
-    prop = metis_job.TableProperty("my_namespace:spark:table:schema:version", "0.0.1")
+    prop = metis_data.TableProperty("my_namespace:spark:table:schema:version", "0.0.1")
 
     assert prop.key == "urn:my_namespace:spark:table:schema:version"
     assert prop.value == "0.0.1"
 
 
 def test_build_property_from_data_agreement_type():
-    prop = metis_job.TableProperty(metis_job.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace")
+    prop = metis_data.TableProperty(metis_data.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace")
     assert prop.key == "urn:my_namespace:spark:table:schema:version"
     assert prop.value == "0.0.1"
 
 
 def test_build_property_from_data_agreement_type_using_specific_part():
-    prop = metis_job.TableProperty(key=metis_job.DataAgreementType.SCHEMA,
+    prop = metis_data.TableProperty(key=metis_data.DataAgreementType.SCHEMA,
                                    value="0.0.1",
                                    ns="my_namespace",
                                    specific_part="myVersion:version")

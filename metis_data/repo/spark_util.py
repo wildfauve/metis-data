@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Tuple
 from enum import Enum
 from collections import ChainMap
 
-from metis_job.util import fn
+from metis_data.util import fn
 
 
 class SparkOption(Enum):

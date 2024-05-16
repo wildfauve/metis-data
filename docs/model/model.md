@@ -14,7 +14,7 @@ Streamer runs a pipeline as follows:
 To setup a stream:
 
 ```python
-from metis_job import model
+from metis_data import model
 
 streamer = (model.Streamer()
             .stream_from(from_table)
@@ -35,7 +35,7 @@ transformation context by passing in kwargs on the `with_transformer`.
 
 ```python
 from dataclasses import dataclass
-from metis_job import model
+from metis_data import model
 
 
 @dataclass

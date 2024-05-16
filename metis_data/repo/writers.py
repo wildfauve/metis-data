@@ -4,7 +4,7 @@ from typing import Protocol, Set, Callable
 from pyspark.sql import dataframe
 from delta.tables import *
 
-from metis_job.util import error, monad
+from metis_data.util import error, monad
 
 from . import spark_util
 

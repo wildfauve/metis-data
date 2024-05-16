@@ -1,6 +1,6 @@
 import pytest
-from metis_job.structure import vocab_util as V
-from metis_job.util import error
+from metis_data.structure import vocab_util as V
+from metis_data.util import error
 
 def test_finds_term(vocab):
     assert V.term_for("columns.column1", vocab) == "column_one"

@@ -1,6 +1,6 @@
 from __future__ import annotations
-import metis_job
-from metis_job.repo import spark_util
+import metis_data
+from metis_data.repo import spark_util
 
 
 class SparkStreamingTableWriter:

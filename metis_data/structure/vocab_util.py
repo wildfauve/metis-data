@@ -1,8 +1,8 @@
 from typing import Dict, Tuple, Optional, List, Callable, Union
 
 from .value import VocabDirective
-from metis_job.util import logger, error, fn
-from metis_job.util import fn
+from metis_data.util import logger, error, fn
+from metis_data.util import fn
 
 TERM_NAMES = {"term", 'term'}
 

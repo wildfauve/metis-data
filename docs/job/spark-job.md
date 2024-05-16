@@ -4,7 +4,7 @@ Job provides a decorator which wraps the execution of a spark job. You use the d
 At the moment it performs 1 function; calling all the registered initialisers.
 
 ```python
-from metis_job import spark_job
+from metis_data import spark_job
 
 @spark_job.job()
 def execute(args=None) -> monad.EitherMonad[value.JobState]:
@@ -14,7 +14,7 @@ def execute(args=None) -> monad.EitherMonad[value.JobState]:
 To register initialisers (to be run just before the job function is called) do the following.
 
 ```python
-from metis_job import spark_job
+from metis_data import spark_job
 
 @spark_job.register()
 def some_initialiser():
@@ -50,7 +50,7 @@ The decorator executes the streaming pipeline and returns an instance of the `mo
 If using `@spark_job.job()` this should is the 1st decorator as it performs initialisations. 
 
 ```python
-from metis_job import spark_job
+from metis_data import spark_job
 
 @spark_job.simple_streaming_job(from_table=from_table_function,
                                 from_reader_options={repo.ReaderSwitch.READ_STREAM_WITH_SCHEMA_ON},

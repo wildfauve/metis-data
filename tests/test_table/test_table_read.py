@@ -1,6 +1,6 @@
 from tests.shared import *
 
-import metis_job as J
+import metis_data as J
 
 
 def test_create_file_from_dsl_structure(di_initialise_spark,

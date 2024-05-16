@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from metis_job.util import error
+from metis_data.util import error
 
 normalise_pattern = pattern = re.compile(r'(?<!^)(?=[A-Z])')
 

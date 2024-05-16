@@ -1,5 +1,5 @@
 from __future__ import annotations
-import metis_job
+import metis_data
 from . import spark_util
 
 
@@ -10,7 +10,7 @@ class SparkRecursiveFileStreamer:
         self.spark_options = spark_options if spark_options else []
 
     def read_stream(self,
-                    cloud_file: metis_job.CloudFiles,):
+                    cloud_file: metis_data.CloudFiles,):
         return (cloud_file.spark_session
                 .readStream
                 .options(**self._spark_opts())
@@ -18,7 +18,7 @@ class SparkRecursiveFileStreamer:
                 .json(cloud_file.cloud_source, multiLine=True, prefersDecimal=True))
 
     def _spark_opts(self):
-        return metis_job.SparkOption.function_based_options(self.__class__.default_spark_options + self.spark_options)
+        return metis_data.SparkOption.function_based_options(self.__class__.default_spark_options + self.spark_options)
 
 
 class DatabricksCloudFilesStreamer:
@@ -33,7 +33,7 @@ class DatabricksCloudFilesStreamer:
     .load(<the-managed-or-external-volume-folder-containing-the-event>)
 
     To configure the stream:
-    > opts = [metis_job.SparkOptions.JSON_CLOUD_FILES_FORMAT]  # only JSON is supported.
+    > opts = [metis_data.SparkOptions.JSON_CLOUD_FILES_FORMAT]  # only JSON is supported.
     > DatabricksCloudFilesStreamer(spark_options=opts)
     """
     format = "cloudFiles"
@@ -44,7 +44,7 @@ class DatabricksCloudFilesStreamer:
 
 
     def read_stream(self,
-                    cloud_file: metis_job.CloudFiles):
+                    cloud_file: metis_data.CloudFiles):
         return (cloud_file.spark_session
                 .readStream
                 .format(self.__class__.format)

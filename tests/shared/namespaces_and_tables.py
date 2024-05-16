@@ -1,5 +1,5 @@
 import pytest
-import metis_job
+import metis_data
 from pyspark.sql import types as T
 
 from . import *
@@ -35,7 +35,7 @@ streaming_to_table_schema = T.StructType(
 @pytest.fixture
 def namespace_wrapper():
     yield
-    di.di_container().get(metis_job.NameSpace).drop_namespace()
+    di.di_container().get(metis_data.NameSpace).drop_namespace()
 
 
 @pytest.fixture
@@ -48,25 +48,25 @@ def dataproduct1_ns():
 
 
 def dp1_cfg_ns():
-    job_config = metis_job.Config(catalogue="testDomain",
+    job_config = metis_data.Config(catalogue="testDomain",
                                   data_product="dp1",
                                   service_name="test-runner",
-                                  job_mode=metis_job.JobMode.SPARK)
+                                  job_mode=metis_data.JobMode.SPARK)
 
-    namespace = metis_job.NameSpace(session=spark_test_session.spark_session(),
+    namespace = metis_data.NameSpace(session=spark_test_session.spark_session(),
                                     job_config=job_config)
     return job_config, namespace
 
 
 def my_table_cls():
-    class MyTable(metis_job.DomainTable):
+    class MyTable(metis_data.DomainTable):
         table_name = "my_table"
         temp_table_name = "_temp_my_hive_table"
         partition_columns = ("name",)
         pruning_column = 'name'
 
         table_properties = [
-            metis_job.TableProperty(metis_job.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace")
+            metis_data.TableProperty(metis_data.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace")
         ]
 
         schema = table_schema
@@ -80,10 +80,10 @@ def my_table_cls():
     return MyTable
 
 
-class MyTable2(metis_job.DomainTable):
+class MyTable2(metis_data.DomainTable):
     table_name = "my_table_2"
 
-    table_creation_protocol = metis_job.CreateManagedDeltaTable
+    table_creation_protocol = metis_data.CreateManagedDeltaTable
 
     partition_columns = ("name",)
 
@@ -98,10 +98,10 @@ class MyTable2(metis_job.DomainTable):
         return f"{name_of_baseline}.id = {update_name}.id"
 
 
-class MyStreamToTable(metis_job.DomainTable):
+class MyStreamToTable(metis_data.DomainTable):
     table_name = "my_stream_to_table"
 
-    table_creation_protocol = metis_job.CreateManagedDeltaTable
+    table_creation_protocol = metis_data.CreateManagedDeltaTable
 
     partition_columns = ("name",)
 
@@ -123,18 +123,18 @@ def my_table2_cls(streaming_table: bool = False):
 
 
 def my_table_with_props_cls():
-    class MyTableCreatedWithProps(metis_job.DomainTable):
-        table_creation_protocol = metis_job.CreateManagedDeltaTable
+    class MyTableCreatedWithProps(metis_data.DomainTable):
+        table_creation_protocol = metis_data.CreateManagedDeltaTable
 
         table_name = "my_hive_table_created_as_managed_table"
 
         table_properties = [
-            metis_job.TableProperty(metis_job.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace"),
-            metis_job.TableProperty(metis_job.DataAgreementType.PARTITION_COLUMNS, "identity", "my_namespace"),
-            metis_job.TableProperty(metis_job.DataAgreementType.PRUNE_COLUMN, "identity", "my_namespace"),
-            metis_job.TableProperty(metis_job.DataAgreementType.PORT, "superTable", "my_namespace"),
-            metis_job.TableProperty(metis_job.DataAgreementType.UPDATE_FREQUENCY, "daily", "my_namespace"),
-            metis_job.TableProperty(metis_job.DataAgreementType.DESCRIPTION, "Some description", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.SCHEMA_VERSION, "0.0.1", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.PARTITION_COLUMNS, "identity", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.PRUNE_COLUMN, "identity", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.PORT, "superTable", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.UPDATE_FREQUENCY, "daily", "my_namespace"),
+            metis_data.TableProperty(metis_data.DataAgreementType.DESCRIPTION, "Some description", "my_namespace"),
         ]
 
         schema = table_schema

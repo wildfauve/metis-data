@@ -4,7 +4,7 @@ from delta import *
 import pyspark
 from pyspark.sql import SparkSession
 
-import metis_job
+import metis_data
 
 from . import di
 
@@ -16,7 +16,7 @@ def di_initialise_spark():
 
 
 def create_session():
-    return metis_job.build_spark_session("test_spark_session",
+    return metis_data.build_spark_session("test_spark_session",
                                          spark_delta_session,
                                          spark_session_config)
 

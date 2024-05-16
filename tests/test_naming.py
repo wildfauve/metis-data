@@ -1,8 +1,8 @@
-import metis_job
+import metis_data
 
 
 def test_spark_naming_for_local():
-    naming = metis_job.SparkNamingConventionDomainBased(job_config=spark_naming())
+    naming = metis_data.SparkNamingConventionDomainBased(job_config=spark_naming())
 
     assert naming.namespace_name() == "dp1"
     assert naming.catalogue() == "domain"
@@ -11,7 +11,7 @@ def test_spark_naming_for_local():
     assert naming.data_product_root() == "dp1"
 
 def test_unity_naming_for_local():
-    naming = metis_job.UnityNamingConventionDomainBased(job_config=spark_naming())
+    naming = metis_data.UnityNamingConventionDomainBased(job_config=spark_naming())
 
     assert naming.namespace_name() == "dp1"
     assert naming.catalogue() == "domain"
@@ -23,7 +23,7 @@ def test_unity_naming_for_local():
 # Helpers
 
 def spark_naming():
-    return metis_job.Config(catalogue="domain",
+    return metis_data.Config(catalogue="domain",
                             data_product="dp1",
                             service_name="test-runner",
-                            job_mode=metis_job.JobMode.SPARK)
+                            job_mode=metis_data.JobMode.SPARK)

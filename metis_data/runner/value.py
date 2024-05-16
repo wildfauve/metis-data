@@ -5,7 +5,7 @@ from typing import Any
 
 from pyspark.sql import DataFrame
 
-from metis_job.util import dataklass, error
+from metis_data.util import dataklass, error
 
 from . import job_runner
 

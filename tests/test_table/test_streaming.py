@@ -2,7 +2,7 @@ import shutil
 from pathlib import Path
 from pyspark.sql.functions import col, current_timestamp
 
-import metis_job
+import metis_data
 
 from tests.shared import spark_test_session, namespaces_and_tables
 
@@ -20,10 +20,10 @@ def setup_function():
 #     checkpoint_loc = 'tests/spark_locations/checkpoints'
 #
 #     table = "sketch"
-#     opts = [metis_job.SparkOption.RECURSIVE_LOOKUP]
+#     opts = [metis_data.SparkOption.RECURSIVE_LOOKUP]
 #
 #     df = (spark_test_session.spark_session()
-#           .readStream.options(**metis_job.SparkOption.function_based_options(opts))
+#           .readStream.options(**metis_data.SparkOption.function_based_options(opts))
 #           .schema(schema())
 #           .json(stream_source, multiLine=True))
 #
@@ -39,14 +39,14 @@ def test_cloud_files_streaming(di_initialise_spark,
     stream_source = "tests/spark_locations/stream_source"
     checkpoint_loc = 'tests/spark_locations/checkpoints'
 
-    opts = [metis_job.SparkOption.MERGE_SCHEMA]
+    opts = [metis_data.SparkOption.MERGE_SCHEMA]
 
-    cloud_files = metis_job.CloudFiles(spark_session=spark_test_session.spark_session(),
-                                       stream_reader=metis_job.SparkRecursiveFileStreamer(),
+    cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
+                                       stream_reader=metis_data.SparkRecursiveFileStreamer(),
                                        cloud_source=stream_source,
                                        checkpoint_location=checkpoint_loc,
                                        schema=namespaces_and_tables.json_file_schema,
-                                       stream_writer=metis_job.SparkStreamingTableWriter(opts),
+                                       stream_writer=metis_data.SparkStreamingTableWriter(opts),
                                        stream_to_table_name="dp1.sketch")
 
     df = cloud_files.read_stream()
@@ -68,12 +68,12 @@ def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
 
     sketches_table = namespaces_and_tables.my_table2_cls(streaming_table=True)(namespace=dataproduct1_ns)
 
-    cloud_files = metis_job.CloudFiles(spark_session=spark_test_session.spark_session(),
-                                       stream_reader=metis_job.SparkRecursiveFileStreamer(),
+    cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
+                                       stream_reader=metis_data.SparkRecursiveFileStreamer(),
                                        cloud_source=stream_source,
                                        checkpoint_location=checkpoint_loc,
                                        schema=namespaces_and_tables.json_file_schema,
-                                       stream_writer=metis_job.DeltaStreamingTableWriter(),
+                                       stream_writer=metis_data.DeltaStreamingTableWriter(),
                                        stream_to_table=sketches_table)
     df = cloud_files.read_stream()
 

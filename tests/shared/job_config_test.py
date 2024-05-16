@@ -1,4 +1,4 @@
-from metis_job import Config
+from metis_data import Config
 
 
 def job_configuration():

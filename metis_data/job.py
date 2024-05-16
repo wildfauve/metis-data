@@ -1,7 +1,7 @@
 from typing import Callable
 
-from metis_job import runner
-from metis_job.util import logger, mod, singleton
+from metis_data import runner
+from metis_data.util import logger, mod, singleton
 
 
 def job(initialiser_module: str = None):
@@ -115,7 +115,7 @@ def initialiser_register(order: int):
     Decorator for registering initialisers to be run prior to the main handler execution.  Note that the module containing
     the random_initialisers must be imported before the runner entry point is called.
 
-    @metis_job.initialiser_register(order=1)
+    @metis_data.initialiser_register(order=1)
     def session_builder():
         pass
 

@@ -44,7 +44,7 @@ visual mapping. In the vocab dict term mapping comes from using the dict key `te
 An example use of the vocab looks like this.
 
 ```python
-from metis_job import schema as S
+from metis_data import schema as S
 
 # initialise a Table with the vocab
 table = S.Schema(vocab=vocab())
@@ -78,7 +78,7 @@ Here is an example uses the complete set of commands.
 
 ```python
 from pyspark.sql.types import DecimalType, StringType
-from metis_job import schema as S
+from metis_data import schema as S
 
 table = (S.Table(vocab=vocab())
          .column()  # column1: string

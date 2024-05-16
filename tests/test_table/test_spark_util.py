@@ -1,4 +1,4 @@
-from metis_job import repo
+from metis_data import repo
 
 
 def test_merge_options():

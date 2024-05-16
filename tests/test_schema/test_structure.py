@@ -1,8 +1,8 @@
 import pytest
 import json
 
-from metis_job.util import error, monad
-from metis_job import schema as S
+from metis_data.util import error, monad
+from metis_data import schema as S
 
 from tests.shared import vocab
 

@@ -5,8 +5,8 @@ from pymonad.tools import curry
 from pyspark.sql import types as T
 from pyspark.sql.types import StructType, StructField
 
-from metis_job.util import json_util, error, fn, monad
-from metis_job.structure import (
+from metis_data.util import json_util, error, fn, monad
+from metis_data.structure import (
     schema_util as su,
     vocab_util as V,
     value,

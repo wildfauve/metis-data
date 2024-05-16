@@ -21,7 +21,7 @@ means an object-mapper. Rather its a few classes with some simple functions we h
 tables.
 
 ```python
-from metis_job import repo
+from metis_data import repo
 ```
 
 ## SparkDB
@@ -32,7 +32,7 @@ are constructed.  There is no need to specialise the `repo.Db` class.  Simply in
 `Db` takes a [spark session](#spark-session) and a [job config](#job-configuration).
 
 ```python
-from metis_job import repo
+from metis_data import repo
 
 db = repo.Db(session=spark_test_session.create_session(), config=job_config())
 ```
@@ -42,7 +42,7 @@ When initialised it checks that the database (defined in the config) exists and 
 The `repo.Db` class supports Hive DB properties.  To use these, specialise the `repo.Db` class, like so:
 
 ```python
-from metis_job import repo
+from metis_data import repo
 
 class MyDb(repo.Db):
     db_properties = [
@@ -82,7 +82,7 @@ helper for table management, reading, writing, and streaming.
 The most basic Hive table is a table name.  There is no table schema, and no table lifecycle events (like creating the table if it doesn't exist) are executed.
 
 ```python
-from metis_job import repo
+from metis_data import repo
 
 class MyHiveTable(repo.HiveRepo):
     table_name = "my_hive_table"
@@ -189,7 +189,7 @@ Return either a dict version of the StructType instance or a StructType instance
 
 ```python
 from pyspark.sql import types as T
-from metis_job import repo
+from metis_data import repo
 
 
 class MyHiveTable(repo.HiveRepo):

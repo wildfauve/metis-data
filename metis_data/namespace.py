@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from typing import Protocol
-from metis_job.util import logger, error
-from metis_job.repo import sql_builder, properties
+from metis_data.util import logger, error
+from metis_data.repo import sql_builder, properties
 from . import config
 
 

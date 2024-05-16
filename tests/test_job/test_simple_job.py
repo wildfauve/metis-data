@@ -1,8 +1,8 @@
 from bevy import dependency, inject
 
-import metis_job
+import metis_data
 
-from metis_job.util import error, monad
+from metis_data.util import error, monad
 from tests.shared import init_state_spy, data, namespaces_and_tables
 
 
@@ -50,20 +50,20 @@ def noop_transformer(df, ctx):
     return monad.Right(df)
 
 
-@metis_job.job(initialiser_module='tests.shared.random_initialisers')
+@metis_data.job(initialiser_module='tests.shared.random_initialisers')
 def run_noop_job():
     return monad.Right(True)
 
 
-@metis_job.job(initialiser_module='tests.shared.job_initialisers')
-@metis_job.simple_spark_job(from_input=get_some_input,
+@metis_data.job(initialiser_module='tests.shared.job_initialisers')
+@metis_data.simple_spark_job(from_input=get_some_input,
                             transformer=noop_transformer,
                             to_table=write_to_table)
-def run_batch_job(args, runner: metis_job.SimpleJob):
+def run_batch_job(args, runner: metis_data.SimpleJob):
     return runner, "-".join(args), run_job_callback
 
 
-def run_job_callback(result: monad.Either[error.BaseError, metis_job.SimpleJobValue]):
+def run_job_callback(result: monad.Either[error.BaseError, metis_data.SimpleJobValue]):
     job = result.value
     return monad.Right(job.replace('run_ctx', f"{job.run_ctx}-->Done!"))
 

@@ -4,7 +4,7 @@ from functools import reduce
 from bevy import dependency
 from pyspark.sql.session import SparkSession
 
-from metis_job.util import fn
+from metis_data.util import fn
 
 def create_session(session_name):
     """

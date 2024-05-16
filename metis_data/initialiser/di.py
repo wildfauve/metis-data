@@ -1,7 +1,7 @@
 from bevy import get_repository
 from pyspark.sql.session import SparkSession
 
-from metis_job.util import error, monad
+from metis_data.util import error, monad
 from . import helpers
 
 from tests.shared import spark_test_session

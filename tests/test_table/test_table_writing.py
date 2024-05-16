@@ -1,6 +1,6 @@
 from tests.shared import *
 
-import metis_job as J
+import metis_data as J
 
 from tests.shared import namespaces_and_tables, data
 

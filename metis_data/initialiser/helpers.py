@@ -1,4 +1,4 @@
-from metis_job.util import logger, singleton
+from metis_data.util import logger, singleton
 
 class Initialiser(singleton.Singleton):
     init_fns = []

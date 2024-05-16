@@ -3,7 +3,7 @@ from __future__ import annotations
 from pyspark.sql import dataframe, types
 from delta.tables import *
 
-from metis_job import repo, DomainTable
+from metis_data import repo, DomainTable
 
 from .util import error, monad
 
