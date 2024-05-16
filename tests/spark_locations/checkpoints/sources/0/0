@@ -1,0 +1,3 @@
+v1
+{"path":"file:///Users/colperks/lang/python/fauve_studio/metis-job/tests/spark_locations/stream_source/table1_rows.json","timestamp":1712517490253,"batchId":0}
+{"path":"file:///Users/colperks/lang/python/fauve_studio/metis-job/tests/spark_locations/stream_source/table1_rows_2.json","timestamp":1712517490253,"batchId":0}
