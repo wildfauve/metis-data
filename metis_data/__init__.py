@@ -1,12 +1,12 @@
 from .config import (
     Config,
-    JobMode
+    CatalogueMode
 )
 
 from .namespace import (
-    SparkNamingConventionDomainBased,
+    SparkCatalogueStrategy,
     NameSpace,
-    UnityNamingConventionDomainBased
+    UnityCatalogueStrategy
 )
 
 from .job import (

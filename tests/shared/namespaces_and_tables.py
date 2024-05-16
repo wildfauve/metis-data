@@ -35,7 +35,7 @@ streaming_to_table_schema = T.StructType(
 @pytest.fixture
 def namespace_wrapper():
     yield
-    di.di_container().get(metis_data.NameSpace).drop_namespace()
+    di.di_container().get(metis_data.NameSpace).drop()
 
 
 @pytest.fixture
@@ -44,18 +44,18 @@ def dataproduct1_ns():
 
     yield namespace
 
-    namespace.drop_namespace()
+    namespace.drop()
 
 
 def dp1_cfg_ns():
-    job_config = metis_data.Config(catalogue="testDomain",
-                                  data_product="dp1",
-                                  service_name="test-runner",
-                                  job_mode=metis_data.JobMode.SPARK)
+    config = metis_data.Config(catalogue="testDomain",
+                               data_product="dp1",
+                               service_name="test-runner",
+                               catalogue_mode=metis_data.CatalogueMode.SPARK)
 
     namespace = metis_data.NameSpace(session=spark_test_session.spark_session(),
-                                    job_config=job_config)
-    return job_config, namespace
+                                     cfg=config)
+    return config, namespace
 
 
 def my_table_cls():

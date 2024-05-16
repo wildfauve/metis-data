@@ -11,7 +11,7 @@ def normalise(token):
         return token
     return normalise_pattern.sub('_', token).lower()
 
-class JobMode(Enum):
+class CatalogueMode(Enum):
     SPARK = "spark"
     UNITY = "unity"
 
@@ -20,7 +20,7 @@ class Config:
     catalogue: str
     data_product: str
     service_name: str
-    job_mode: JobMode = field(default_factory=lambda: JobMode.UNITY)
+    catalogue_mode: CatalogueMode = field(default_factory=lambda: CatalogueMode.UNITY)
     checkpoint_location: str | None = None
 
     def __post_init__(self):

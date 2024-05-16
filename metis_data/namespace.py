@@ -59,21 +59,31 @@ class NamingConventionProtocol(Protocol):
         ...
 
 
-class SparkNamingConventionDomainBased(NamingConventionProtocol):
+class SparkCatalogueStrategy:
     """
     """
 
-    def __init__(self, job_config):
-        self.config = job_config
+    def __init__(self, session, cfg):
+        self.session = session
+        self.cfg = cfg
+
+    def create(self, props, if_not_exists=True):
+        self.session.sql(sql_builder.create_db(db_name=self.namespace_name(),
+                                               db_property_expression=props))
+        return self
+
+    def drop(self):
+        self.session.sql(f"drop database IF EXISTS {self.namespace_name()} CASCADE")
+        return self
 
     def namespace_name(self):
-        return self.config.data_product
+        return self.cfg.data_product
 
     def catalogue(self):
-        return self.config.catalogue
+        return self.cfg.catalogue
 
     def data_product_name(self):
-        return self.config.data_product
+        return self.cfg.data_product
 
     def fully_qualified_name(self, table_name):
         return f"{self.namespace_name()}.{table_name}"
@@ -82,21 +92,28 @@ class SparkNamingConventionDomainBased(NamingConventionProtocol):
         return self.namespace_name()
 
 
-class UnityNamingConventionDomainBased(NamingConventionProtocol):
-    """
-    """
+class UnityCatalogueStrategy:
+    def __init__(self, session, cfg: config.Config):
+        self.session = session
+        self.cfg = cfg
 
-    def __init__(self, job_config):
-        self.config = job_config
+    def create(self, props, if_not_exists=True):
+        self.session.sql(sql_builder.create_db(db_name=self.namespace_name(),
+                                               db_property_expression=props))
+        return self
+
+    def drop(self):
+        self.session.sql(f"drop database IF EXISTS {self.namespace_name()} CASCADE")
+        return self
 
     def namespace_name(self):
-        return self.config.data_product
+        return self.cfg.data_product
 
     def catalogue(self):
-        return self.config.catalogue
+        return self.cfg.catalogue
 
     def data_product_name(self):
-        return self.config.data_product
+        return self.cfg.data_product
 
     def fully_qualified_name(self, table_name):
         return f"{self.catalogue()}.{self.namespace_name()}.{table_name}"
@@ -106,41 +123,47 @@ class UnityNamingConventionDomainBased(NamingConventionProtocol):
 
 
 class NameSpace:
+    """
+    A namespace is the logical location of the domain's artefacts, specifically tables (or schemas)
+    and volumes.  A Namespace behaviour differs between local PySpark environments and a Databricks
+    Unity-based environment.
+    In the Unity world, we have 3 main layers, Catalogue, Schemas (or Databases) and Tables.  Keeping
+    the local PySpark (and Delta) env as close as possible requires that the namespace has 2 layers,
+    Catalogue and Table.
+    """
 
     def __init__(self,
                  session,
-                 job_config):
+                 cfg: config.Config):
         self.session = session
-        self.config = job_config
-        self.naming = self.determine_naming_convention()
-        self.create_namespace_if_not_exists()
+        self.cfg = cfg
+        self.catalogue_strategy = self.determine_naming_convention()
+        self.create_if_not_exists()
 
     def determine_naming_convention(self):
-        match self.config.job_mode:
-            case config.JobMode.SPARK:
-                return SparkNamingConventionDomainBased(self.config)
-            case config.JobMode.UNITY:
-                return UnityNamingConventionDomainBased(self.config)
+        match self.cfg.catalogue_mode:
+            case config.CatalogueMode.SPARK:
+                return SparkCatalogueStrategy(self.session, self.cfg)
+            case config.CatalogueMode.UNITY:
+                return UnityCatalogueStrategy(self.session, self.cfg)
             case _:
-                raise error.generate_error(error.ConfigurationError,
-                                           (422, 1))
+                raise error.generate_error(error.ConfigurationError, (422, 1))
 
     #
     # DB LifeCycle Functions
     #
-    def create_namespace_if_not_exists(self):
-        self.session.sql(sql_builder.create_db(db_name=self.naming.namespace_name(),
-                                               db_property_expression=self.property_expr()))
+    def create_if_not_exists(self):
+        self.catalogue_strategy.create(props=self.property_expr(), if_not_exists=True)
 
-    def drop_namespace(self):
-        self.session.sql(f"drop database IF EXISTS {self.naming.namespace_name()} CASCADE")
+    def drop(self):
+        self.catalogue_strategy.drop()
         return self
 
     def fully_qualified_table_name(self, table_name):
-        return self.naming.fully_qualified_name(table_name)
+        return self.catalogue_strategy.fully_qualified_name(table_name)
 
     def namespace_exists(self) -> bool:
-        return self.session.catalog.databaseExists(self.naming.namespace_name())
+        return self.session.catalog.databaseExists(self.catalogue_strategy.namespace_name())
 
     def table_exists(self, table_name):
         return table_name in self.list_tables()
@@ -149,10 +172,10 @@ class NameSpace:
         return self.session.catalog.tableExists(table_name)
 
     def list_tables(self):
-        return [table.name for table in self.session.catalog.listTables(self.naming.data_product_root())]
+        return [table.name for table in self.session.catalog.listTables(self.catalogue_strategy.data_product_root())]
 
     def table_format(self):
-        return self.config.db.table_format
+        return self.cfg.db.table_format
 
     #
     # DB Property Functions
