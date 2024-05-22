@@ -1,6 +1,6 @@
 from tests.shared import *
 
-import metis_data as J
+import metis_data
 
 
 def test_create_file_from_dsl_structure(di_initialise_spark,
@@ -12,10 +12,19 @@ def test_create_file_from_dsl_structure(di_initialise_spark,
     assert df.schema == table1_definition().to_spark_schema()
 
 
+def test_dont_need_a_schema_for_already_created_table(di_initialise_spark,
+                                                      dataproduct1_ns):
+    table1 = Table1(namespace=dataproduct1_ns)
+
+    df = Table1WithOutSchema(namespace=dataproduct1_ns).read()
+
+    assert df.schema == table1_definition().to_spark_schema()
+
+
 # Helpers
 
 def table1_definition():
-    return (J.Schema(vocab=vocab())
+    return (metis_data.Schema(vocab=vocab())
             .column()  # column1: string
             .string("columns.column1", nullable=False)
 
@@ -58,7 +67,7 @@ def vocab():
     }
 
 
-class Table1(J.DomainTable):
+class Table1(metis_data.DomainTable):
     table_name = "table1"
 
     schema = table1_definition().to_spark_schema()
@@ -66,3 +75,6 @@ class Table1(J.DomainTable):
     def after_initialise(self):
         self.perform_table_creation_protocol()
 
+
+class Table1WithOutSchema(metis_data.DomainTable):
+    table_name = "table1"

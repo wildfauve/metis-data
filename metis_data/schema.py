@@ -132,7 +132,7 @@ class Struct:
 class Column:
 
     def __init__(self,
-                 vocab: Dict,
+                 vocab: Dict = None,
                  vocab_term: str = None,
                  struct_fn: Callable = None,
                  callback: Callable = None,

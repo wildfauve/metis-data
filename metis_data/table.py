@@ -1,14 +1,34 @@
 from __future__ import annotations
 
-from pyspark.sql import dataframe
+from pyspark.sql import DataFrame
 from delta.tables import *
 
 from metis_data import repo
 from . import namespace as ns
-from .util import error, monad
+from .util import error
 
 ReaderType = repo.DeltaTableReader
 WriterType = repo.DeltaTableWriter
+
+
+def init_schema_on_read(f):
+    """
+    Decorator to initialise a table's schema on a read.  The decorated function should return
+    a Dataframe.  When the table has not been initialised with a schema, the schema is
+    initialised from the read dataframe.
+    """
+
+    def func(*args, **kwargs):
+        df = f(*args, **kwargs)
+        if not isinstance(df, DataFrame):
+            error.generate_error(error.RepoConfigError, (500, 1))
+        cls = args[0].__class__
+        if cls.schema:
+            return df
+        cls.schema = df.schema
+        return df
+
+    return func
 
 
 class CreateManagedDeltaTable:
@@ -74,7 +94,8 @@ class DomainTable:
         self.properties = self.property_manager  # hides, a little, the class managing properties.
         self.after_initialise()  # callback Hook
 
-    def read(self, reader_options=None) -> dataframe.DataFrame:
+    @init_schema_on_read
+    def read(self, reader_options=None) -> DataFrame:
         return self.reader().read(self, reader_options=reader_options)
 
     def table_exists(self) -> bool:
@@ -93,7 +114,8 @@ class DomainTable:
         return self.identity_merge_condition if hasattr(self, 'identity_merge_condition') else None
 
     def perform_table_creation_protocol(self):
-        if not self.table_creation_protocol and not self.__class__.table_creation_protocol:
+        if (not self.table_creation_protocol and not self.__class__.table_creation_protocol
+                or not self.__class__.schema):
             raise error.generate_error(error.RepoConfigurationError, (422, 2))
         if self.table_creation_protocol:
             self.table_creation_protocol().perform(self)
