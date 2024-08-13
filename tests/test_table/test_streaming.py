@@ -24,12 +24,15 @@ def test_cloud_files_streaming(di_initialise_spark,
 
     session = spark_test_session.spark_session()
 
+    ext_vol = metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
+                                                name="events",
+                                                source=stream_source,
+                                                external_bucket="s3://bucket/folder")
+
     cloud_files = metis_data.CloudFiles(spark_session=session,
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
-                                        cloud_source=metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
-                                                                                       name="events",
-                                                                                       source=stream_source),
+                                        cloud_source=ext_vol,
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.SparkStreamingTableWriter(opts),
                                         stream_to_table_name="dp1.sketch")
@@ -53,12 +56,15 @@ def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
 
     sketches_table = namespaces_and_tables.my_table2_cls(streaming_table=True)(namespace=dataproduct1_ns)
 
+    ext_vol = metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
+                                                name="events",
+                                                source=stream_source,
+                                                external_bucket="s3://bucket/folder")
+
     cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
-                                        cloud_source=metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
-                                                                                       name="events",
-                                                                                       source=stream_source),
+                                        cloud_source=ext_vol,
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.DeltaStreamingTableWriter(),
                                         stream_to_table=sketches_table)

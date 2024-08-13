@@ -47,10 +47,15 @@ def test_unity_create_ext_vol():
     sess.clear()
     ns = metis_data.NameSpace(session=sess, cfg=unity_cfg())
 
-    ext_vol = metis_data.S3ExternalVolumeSource(ns=ns, name="events", source="s3://bucket/vol1")
+    ext_vol = metis_data.S3ExternalVolumeSource(ns=ns,
+                                                name="events",
+                                                source="/Volume/domain/data_product",
+                                                external_bucket="s3://bucket/folder")
+
 
     expected_exprs = ['create database IF NOT EXISTS domain.dp1',
-                      "CREATE EXTERNAL VOLUME IF NOT EXISTS `domain.dp1.events` LOCATION 's3://bucket/vol1'"]
+                      "CREATE EXTERNAL VOLUME IF NOT EXISTS `domain.dp1.events` LOCATION 's3://bucket/folder'"]
+
     assert sess.exprs == expected_exprs
 
 

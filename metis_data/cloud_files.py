@@ -19,6 +19,7 @@ class S3ExternalVolumeSource:
     ns: metis_data.NameSpace
     name: str
     source: str
+    external_bucket: str
 
     def __post_init__(self):
         self.ns.create_external_volume(self)

@@ -130,7 +130,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         External volumes are only created on Databricks
         """
         expr = sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
-                                                  volume_source.location)
+                                                  volume_source.external_bucket)
         logger.info(
             f"{self.__class__.__name__}.create_external_volume: {expr.value}")
 
