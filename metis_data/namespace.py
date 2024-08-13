@@ -160,8 +160,8 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def fully_qualified_volume_name(self, volume_name):
         return f"{self.data_product_root}.{volume_name}"
 
-    def fully_qualified_schema_name(self, schema_name):
-        return f"{self.catalogue}.{schema_name}"
+    def fully_qualified_schema_name(self):
+        return f"{self.catalogue}.{self.namespace_name}"
 
     @property
     def data_product_root(self) -> str:
