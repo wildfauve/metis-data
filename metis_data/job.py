@@ -94,28 +94,34 @@ def simple_spark_job(from_input: Callable,
 class Initialiser(singleton.Singleton):
     init_fns = []
 
-    def add_initialiser(self, f, order):
-        self.init_fns.append((f, order))
+    def add_initialiser(self, f, order, log_state):
+        self.init_fns.append((f, order, log_state))
 
     def invoke_fns(self):
-        [self._invoke(f) for f, _ in sorted(self.init_fns, key=lambda f: f[1])]
+        [self._invoke(f, log_state) for f, _, log_state in sorted(self.init_fns, key=lambda f: f[1])]
 
-    def _invoke(self, f):
+    def _invoke(self, f, log_state):
         result = f()
-        if result.is_right():
-            status = "ok"
-        else:
-            status = f"fail: error: {result.error().message}"
-            logger.info(f"Calling Initialisation fn: {f.__name__} with result: {status}")
+        self.log_result(f, result, log_state)
         return result
 
+    def log_result(self, f, result, log_state):
+        if result.is_right():
+            msg = f"Called Initialisation fn: {f.__name__} with result: OK"
+        else:
+            status = f"fail: error: {result.error().message}"
+            msg = f"Called Initialisation fn: {f.__name__} with result: {status}"
 
-def initialiser_register(order: int):
+        if log_state:
+            logger.info(msg)
+
+
+def initialiser_register(order: int, log_state: bool = True):
     """
     Decorator for registering initialisers to be run prior to the main handler execution.  Note that the module containing
-    the random_initialisers must be imported before the runner entry point is called.
+    the initialisers must be imported before the runner entry point is called.
 
-    @metis_data.initialiser_register(order=1)
+    @helpers.register(order=1)
     def session_builder():
         pass
 
@@ -123,7 +129,7 @@ def initialiser_register(order: int):
     """
 
     def inner(f):
-        Initialiser().add_initialiser(f=f, order=order)
+        Initialiser().add_initialiser(f=f, order=order, log_state=log_state)
 
     return inner
 
