@@ -54,7 +54,7 @@ def test_unity_create_ext_vol():
 
 
     expected_exprs = ['create database IF NOT EXISTS domain.dp1',
-                      "CREATE EXTERNAL VOLUME IF NOT EXISTS `domain.dp1.events` LOCATION 's3://bucket/folder'"]
+                      "CREATE EXTERNAL VOLUME IF NOT EXISTS domain.dp1.events LOCATION 's3://bucket/folder'"]
 
     assert sess.exprs == expected_exprs
 
