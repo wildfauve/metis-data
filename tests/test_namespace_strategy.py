@@ -50,7 +50,7 @@ def test_unity_create_ext_vol():
     ext_vol = metis_data.S3ExternalVolumeSource(ns=ns, name="events", source="s3://bucket/vol1")
 
     expected_exprs = ['create database IF NOT EXISTS domain.dp1',
-                      "CREATE EXTERNAL VOLUME IF NOT EXISTS 'domain.dp1.events' LOCATION 's3://bucket/vol1'"]
+                      "CREATE EXTERNAL VOLUME IF NOT EXISTS `domain.dp1.events` LOCATION 's3://bucket/vol1'"]
     assert sess.exprs == expected_exprs
 
 
