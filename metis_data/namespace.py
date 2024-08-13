@@ -71,7 +71,8 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         # (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
         #                                     volume_source.location)
         #  .maybe(self.maybe_sql))
-        logger.info(f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
+        logger.info(
+            f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
         return self
 
     def drop(self):
@@ -128,10 +129,12 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         """
         External volumes are only created on Databricks
         """
-        (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
-                                            volume_source.location)
-         .maybe(None, self.maybe_sql))
-        logger.info(f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
+        expr = sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
+                                                  volume_source.location)
+        logger.info(
+            f"{self.__class__.__name__}.create_external_volume: {expr.value}")
+
+        expr.maybe(None, self.maybe_sql)
         return self
 
     def drop(self):
