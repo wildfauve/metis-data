@@ -118,10 +118,10 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return self.session.sql(expr)
 
     def create(self, props, if_not_exists=True):
-        (sql_builder.create_db(db_name=self.namespace_name,
+        (sql_builder.create_db(db_name=self.fully_qualified_schema_name(),
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
-        logger.info(f"{self.__class__.__name__}.create : {self.namespace_name}")
+        logger.info(f"{self.__class__.__name__}.create : {self.fully_qualified_schema_name()}")
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -159,6 +159,9 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
 
     def fully_qualified_volume_name(self, volume_name):
         return f"{self.data_product_root}.{volume_name}"
+
+    def fully_qualified_schema_name(self, schema_name):
+        return f"{self.catalogue}.{schema_name}"
 
     @property
     def data_product_root(self) -> str:

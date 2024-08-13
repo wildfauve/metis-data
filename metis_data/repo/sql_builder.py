@@ -26,7 +26,7 @@ def create_external_volume(volume_name: str,
 
 
 def create_ext_vol_base(name, expr) -> Maybe[list]:
-    return Just(expr + [f"CREATE EXTERNAL VOLUME IF NOT EXISTS {name}"])
+    return Just(expr + [f"CREATE EXTERNAL VOLUME IF NOT EXISTS '{name}'"])
 
 
 def with_volume_location(name, expr) -> Maybe[list]:
