@@ -130,7 +130,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         """
         (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
                                             volume_source.location)
-         .maybe(self.maybe_sql))
+         .maybe(None, self.maybe_sql))
         logger.info(f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
         return self
 
