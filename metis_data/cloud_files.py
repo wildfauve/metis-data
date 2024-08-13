@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyspark.sql import dataframe, types
 from delta.tables import *
 
+import metis_data
 from metis_data import repo, DomainTable, namespace as ns
 
 from .util import error, monad
@@ -11,13 +14,27 @@ CloudFilesStreamReader = repo.SparkRecursiveFileStreamer | repo.DatabricksCloudF
 CloudFilesStreamWriter = repo.SparkStreamingTableWriter | repo.DeltaStreamingTableWriter
 
 
+@dataclass
+class S3ExternalVolumeSource:
+    ns: metis_data.NameSpace
+    name: str
+    source: str
+
+    def __post_init__(self):
+        self.ns.create_external_volume(self)
+
+    @property
+    def location(self):
+        return self.source
+
+
 class CloudFiles:
 
     def __init__(self,
                  spark_session: SparkSession,
                  namespace: ns.NameSpace,
                  stream_reader: CloudFilesStreamReader,
-                 cloud_source: str,
+                 cloud_source: S3ExternalVolumeSource,
                  schema: types.StructType,
                  stream_writer: CloudFilesStreamWriter,
                  stream_to_table_name: str = None,

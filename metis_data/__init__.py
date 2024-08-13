@@ -46,5 +46,6 @@ from .repo import (
 )
 
 from .cloud_files import (
-    CloudFiles
+    CloudFiles,
+    S3ExternalVolumeSource
 )

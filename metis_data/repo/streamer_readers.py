@@ -15,7 +15,7 @@ class SparkRecursiveFileStreamer:
                 .readStream
                 .options(**self._spark_opts())
                 .schema(cloud_file.schema)
-                .json(cloud_file.cloud_source, multiLine=True, prefersDecimal=True))
+                .json(cloud_file.cloud_source.location, multiLine=True, prefersDecimal=True))
 
     def _spark_opts(self):
         return metis_data.SparkOption.function_based_options(self.__class__.default_spark_options + self.spark_options)
@@ -50,7 +50,7 @@ class DatabricksCloudFilesStreamer:
                 .format(self.__class__.format)
                 .options(**self._spark_opts(cloud_file))
                 .schema(cloud_file.schema)
-                .load(cloud_file.cloud_source))
+                .load(cloud_file.cloud_source.location))
 
     def _spark_opts(self, cloud_file):
         opts = spark_util.SparkOption.function_based_options(self.__class__.default_spark_options + self.spark_options)

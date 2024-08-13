@@ -1,19 +1,52 @@
-from typing import Tuple, List
+from functools import partial
+from typing import Tuple
+from pymonad.maybe import Just, Nothing, Maybe
 
 
 def create_db(db_name: str,
-              db_property_expression: str = None):
-    sql = create_db_base(db_name)
+              db_property_expression: str = None) -> Maybe[str]:
+    """
+    This is equivalent to CREATE SCHEMA.
+    """
+    return (Just([])
+            .maybe(None, partial(create_db_base, db_name))
+            .maybe(None, partial(db_props, db_property_expression))
+            .maybe(None, maybe_joiner))
 
-    sql.append(f" WITH DBPROPERTIES ( {db_property_expression} )") if db_property_expression else sql
-    return joiner(sql)
+
+def create_external_volume(volume_name: str,
+                           volume_location: str) -> Maybe[str]:
+    """
+    This is equivalent to CREATE SCHEMA.
+    """
+    return (Just([])
+            .maybe(None, partial(create_ext_vol_base, volume_name))
+            .maybe(None, partial(with_volume_location, volume_location))
+            .maybe(None, maybe_joiner))
+
+
+def create_ext_vol_base(name, expr) -> Maybe[list]:
+    return Just(expr + [f"CREATE EXTERNAL VOLUME IF NOT EXISTS {name}"])
+
+
+def with_volume_location(name, expr) -> Maybe[list]:
+    return Just(expr + [f"LOCATION '{name}'"])
+
 
 def describe_db(db_name: str) -> str:
     sql = [f"DESCRIBE DATABASE EXTENDED {db_name}"]
     return joiner(sql)
 
-def create_db_base(db_name: str):
-    return [f"create database IF NOT EXISTS {db_name}"]
+
+def create_db_base(db_name: str, expr: list) -> Maybe[list]:
+    return Just(expr + [f"create database IF NOT EXISTS {db_name}"])
+
+
+def db_props(props: str, expr: list) -> Maybe[list]:
+    if not props:
+        return Just(expr)
+    return Just(expr + [f" WITH DBPROPERTIES ( {props} )"])
+
 
 def create_unmanaged_table(table_name: str,
                            col_specification: str,
@@ -41,7 +74,7 @@ def create_managed_table(table_name: str,
 def base_create_table(table_name: str,
                       col_specification: str,
                       partition_clause: Tuple = None,
-                      table_property_expression: str = None) -> List[str]:
+                      table_property_expression: str = None) -> list[str]:
     tbl_props = f"TBLPROPERTIES ( {table_property_expression} )" if table_property_expression else None
     partition_on = f"PARTITIONED BY ( {','.join(partition_clause)} )" if partition_clause else None
 
@@ -67,5 +100,13 @@ def unset_properties(table_name: str, props: str):
     return joiner([f"alter table {table_name} UNSET TBLPROPERTIES ({props})"])
 
 
-def joiner(expr: List):
+def joiner(expr: list):
     return " ".join(expr)
+
+
+def maybe_joiner(expr: list) -> Maybe[list]:
+    return Just(" ".join(expr))
+
+
+def _to_maybe(val):
+    return Just(val) if val else Nothing

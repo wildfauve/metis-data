@@ -55,7 +55,7 @@ def dp1_cfg_ns():
                                service_name="test-runner",
                                catalogue_mode=metis_data.CatalogueMode.SPARK,
                                checkpoint_name="checkpoints",
-                               namespace_strategy_cls=TestingSparkCatalogueStrategy)
+                               namespace_strategy_cls=SparkCatalogueStrategyForTesting)
 
     namespace = metis_data.NameSpace(session=spark_test_session.spark_session(),
                                      cfg=config)
@@ -84,7 +84,7 @@ def my_table_cls():
     return MyTable
 
 
-class TestingSparkCatalogueStrategy(namespace.SparkCatalogueStrategy):
+class SparkCatalogueStrategyForTesting(namespace.SparkCatalogueStrategy):
 
     def __init__(self, session, cfg):
         super().__init__(session, cfg)

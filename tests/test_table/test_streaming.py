@@ -22,10 +22,14 @@ def test_cloud_files_streaming(di_initialise_spark,
 
     opts = [metis_data.SparkOption.MERGE_SCHEMA]
 
-    cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
+    session = spark_test_session.spark_session()
+
+    cloud_files = metis_data.CloudFiles(spark_session=session,
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
-                                        cloud_source=stream_source,
+                                        cloud_source=metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
+                                                                                       name="events",
+                                                                                       source=stream_source),
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.SparkStreamingTableWriter(opts),
                                         stream_to_table_name="dp1.sketch")
@@ -52,7 +56,9 @@ def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
     cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
-                                        cloud_source=stream_source,
+                                        cloud_source=metis_data.S3ExternalVolumeSource(ns=dataproduct1_ns,
+                                                                                       name="events",
+                                                                                       source=stream_source),
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.DeltaStreamingTableWriter(),
                                         stream_to_table=sketches_table)

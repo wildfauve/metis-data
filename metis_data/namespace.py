@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Protocol
+
+import metis_data
 from metis_data.util import logger, error
 from metis_data.repo import sql_builder, properties
 from . import config
@@ -8,6 +10,9 @@ from . import config
 
 class CatalogueStrategyProtocol(Protocol):
     def create(self, props, if_not_exists=True):
+        ...
+
+    def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
         ...
 
     def drop(self):
@@ -49,9 +54,22 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         self.session = session
         self.cfg = cfg
 
+    def maybe_sql(self, expr):
+        return self.session.sql(expr)
+
     def create(self, props, if_not_exists=True):
-        self.session.sql(sql_builder.create_db(db_name=self.namespace_name,
-                                               db_property_expression=props))
+        (sql_builder.create_db(db_name=self.namespace_name,
+                               db_property_expression=props)
+         .maybe(None, self.maybe_sql))
+        return self
+
+    def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
+        """
+        External volumes are only created on Databricks, so this is a noop
+        """
+        # (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
+        #                                     volume_source.location)
+        #  .maybe(self.maybe_sql))
         return self
 
     def drop(self):
@@ -71,7 +89,10 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         return self.cfg.data_product
 
     def fully_qualified_name(self, table_name):
-        return f"{self.namespace_name}.{table_name}"
+        return f"{self.data_product_root}.{table_name}"
+
+    def fully_qualified_volume_name(self, volume_name):
+        return f"{self.data_product_root}.{volume_name}"
 
     @property
     def checkpoint_name(self):
@@ -91,9 +112,22 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         self.session = session
         self.cfg = cfg
 
+    def maybe_sql(self, expr):
+        return self.session.sql(expr)
+
     def create(self, props, if_not_exists=True):
-        self.session.sql(sql_builder.create_db(db_name=self.namespace_name,
-                                               db_property_expression=props))
+        (sql_builder.create_db(db_name=self.namespace_name,
+                               db_property_expression=props)
+         .maybe(None, self.maybe_sql))
+        return self
+
+    def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
+        """
+        External volumes are only created on Databricks
+        """
+        (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
+                                            volume_source.location)
+         .maybe(self.maybe_sql))
         return self
 
     def drop(self):
@@ -117,7 +151,10 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return self.cfg.checkpoint_name
 
     def fully_qualified_name(self, table_name):
-        return f"{self.catalogue}.{self.namespace_name}.{table_name}"
+        return f"{self.data_product_root}.{table_name}"
+
+    def fully_qualified_volume_name(self, volume_name):
+        return f"{self.data_product_root}.{volume_name}"
 
     @property
     def data_product_root(self) -> str:
@@ -165,6 +202,10 @@ class NameSpace:
 
     def drop(self):
         self.catalogue_strategy.drop()
+        return self
+
+    def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
+        self.catalogue_strategy.create_external_volume(volume_source)
         return self
 
     def fully_qualified_table_name(self, table_name):
