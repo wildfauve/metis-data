@@ -61,6 +61,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         (sql_builder.create_db(db_name=self.namespace_name,
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
+        logger.info(f"{self.__class__.__name__}.create: {self.namespace_name}")
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -70,6 +71,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         # (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
         #                                     volume_source.location)
         #  .maybe(self.maybe_sql))
+        logger.info(f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
         return self
 
     def drop(self):
@@ -119,6 +121,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         (sql_builder.create_db(db_name=self.namespace_name,
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
+        logger.info(f"{self.__class__.__name__}.create : {self.namespace_name}")
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -128,6 +131,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
                                             volume_source.location)
          .maybe(self.maybe_sql))
+        logger.info(f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
         return self
 
     def drop(self):
