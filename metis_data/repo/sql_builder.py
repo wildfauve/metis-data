@@ -13,6 +13,12 @@ def create_db(db_name: str,
             .maybe(None, partial(db_props, db_property_expression))
             .maybe(None, maybe_joiner))
 
+def create_managed_volume(volume_name: str) -> Maybe[str]:
+    """
+    """
+    return (Just([])
+            .maybe(None, partial(_create_managed_volume, volume_name))
+            .maybe(None, maybe_joiner))
 
 def create_external_volume(volume_name: str,
                            volume_location: str) -> Maybe[str]:
@@ -27,6 +33,10 @@ def create_external_volume(volume_name: str,
 
 def create_ext_vol_base(name, expr) -> Maybe[list]:
     return Just(expr + [f"CREATE EXTERNAL VOLUME IF NOT EXISTS {name}"])
+
+
+def _create_managed_volume(name, expr) -> Maybe[list]:
+    return Just(expr + [f"CREATE VOLUME IF NOT EXISTS {name}"])
 
 
 def with_volume_location(name, expr) -> Maybe[list]:

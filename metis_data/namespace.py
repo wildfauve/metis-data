@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
 from typing import Protocol
 
 import metis_data
@@ -13,6 +15,9 @@ class CatalogueStrategyProtocol(Protocol):
         ...
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
+        ...
+
+    def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
         ...
 
     def drop(self):
@@ -33,16 +38,14 @@ class CatalogueStrategyProtocol(Protocol):
     def fully_qualified_name(self, table_name):
         ...
 
-    @property
-    def checkpoint_name(self):
+    def checkpoint_name(self, ns=None):
         ...
 
     @property
     def data_product_root(self) -> str:
         ...
 
-    @property
-    def checkpoint_volume(self) -> str:
+    def checkpoint_volume(self, ns) -> str:
         ...
 
 
@@ -64,13 +67,20 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         logger.info(f"{self.__class__.__name__}.create: {self.namespace_name}")
         return self
 
+    def create_checkpoint_volume(self, checkpoint_volume: metis_data.CheckpointLocal):
+        """
+        Where the checkpoint is in local, normally test, mode, the folder is created.
+        No other strategy is supported aside from local create.
+        """
+        checkpoint_path = Path(checkpoint_volume.path) / checkpoint_volume.name
+        if not checkpoint_path.exists():
+            checkpoint_path.mkdir(parents=True, exist_ok=True)
+        return self
+
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
         """
         External volumes are only created on Databricks, so this is a noop
         """
-        # (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
-        #                                     volume_source.location)
-        #  .maybe(self.maybe_sql))
         logger.info(
             f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
         return self
@@ -97,17 +107,15 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
     def fully_qualified_volume_name(self, volume_name):
         return f"{self.data_product_root}.{volume_name}"
 
-    @property
-    def checkpoint_name(self):
+    def checkpoint_name(self, ns=None):
         return self.cfg.checkpoint_name
 
     @property
     def data_product_root(self) -> str:
         return self.namespace_name
 
-    @property
-    def checkpoint_volume(self) -> str:
-        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name}"
+    def checkpoint_volume(self, ns=None) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name()}"
 
 
 class UnityCatalogueStrategy(CatalogueStrategyProtocol):
@@ -123,6 +131,14 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
         logger.info(f"{self.__class__.__name__}.create : {self.fully_qualified_schema_name()}")
+        return self
+
+    def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
+        expr = sql_builder.create_managed_volume(self.fully_qualified_volume_name(checkpoint_volume.name))
+        logger.info(
+            f"{self.__class__.__name__}.create_checkpoint_volume: {expr.value}")
+
+        expr.maybe(None, self.maybe_sql)
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -153,8 +169,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def data_product_name(self):
         return self.cfg.data_product
 
-    @property
-    def checkpoint_name(self):
+    def checkpoint_name(self, ns=None):
         return self.cfg.checkpoint_name
 
     def fully_qualified_name(self, table_name):
@@ -170,9 +185,8 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def data_product_root(self) -> str:
         return f"{self.catalogue}.{self.namespace_name}"
 
-    @property
-    def checkpoint_volume(self) -> str:
-        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name}"
+    def checkpoint_volume(self, ns=None) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name()}"
 
 
 class NameSpace:
@@ -216,6 +230,10 @@ class NameSpace:
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
         self.catalogue_strategy.create_external_volume(volume_source)
+        return self
+
+    def create_checkpoint_volume(self, checkpoint_volume: metis_data.CheckpointVolume):
+        self.catalogue_strategy.create_checkpoint_volume(checkpoint_volume)
         return self
 
     def fully_qualified_table_name(self, table_name):

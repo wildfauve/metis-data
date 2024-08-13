@@ -89,9 +89,8 @@ class SparkCatalogueStrategyForTesting(namespace.SparkCatalogueStrategy):
     def __init__(self, session, cfg):
         super().__init__(session, cfg)
 
-    @property
-    def checkpoint_volume(self) -> str:
-        return f"tests/spark_locations/{self.checkpoint_name}"
+    def checkpoint_volume(self, ns: metis_data.CloudFiles) -> str:
+        return f"{ns.checkpoint_volume.path}/{self.checkpoint_name()}"
 
 
 
