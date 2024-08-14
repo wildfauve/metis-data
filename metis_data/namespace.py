@@ -73,6 +73,9 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         No other strategy is supported aside from local create.
         """
         checkpoint_path = Path(checkpoint_volume.path) / checkpoint_volume.name
+        logger.info(
+            f"{self.__class__.__name__}.create_checkpoint_volume: {str(checkpoint_path)}")
+
         if not checkpoint_path.exists():
             checkpoint_path.mkdir(parents=True, exist_ok=True)
         return self
