@@ -122,6 +122,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
 
 
 class UnityCatalogueStrategy(CatalogueStrategyProtocol):
+    default_checkpoint_name = "checkpoints"
     def __init__(self, session, cfg: config.Config):
         self.session = session
         self.cfg = cfg
@@ -137,7 +138,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return self
 
     def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
-        expr = sql_builder.create_managed_volume(self.fully_qualified_volume_name(checkpoint_volume.name))
+        expr = sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume())
         logger.info(
             f"{self.__class__.__name__}.create_checkpoint_volume: {expr.value}")
 
@@ -181,6 +182,10 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def fully_qualified_volume_name(self, volume_name):
         return f"{self.data_product_root}.{volume_name}"
 
+    def fully_qualified_checkpoint_volume(self):
+        return f"{self.data_product_root}.{self.__class__.default_checkpoint_name}"
+
+
     def fully_qualified_schema_name(self):
         return f"{self.catalogue}.{self.namespace_name}"
 
@@ -189,7 +194,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return f"{self.catalogue}.{self.namespace_name}"
 
     def checkpoint_volume(self, ns=None) -> str:
-        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name()}"
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/{self.__class__.default_checkpoint_name}/{self.checkpoint_name()}"
 
 
 class NameSpace:
