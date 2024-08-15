@@ -1,6 +1,6 @@
 import pytest
 
-from pyspark.sql.types import DecimalType, StringType
+from pyspark.sql.types import DecimalType, StringType, MapType
 from metis_data import schema as S
 from metis_data.util import error
 
@@ -119,7 +119,27 @@ def test_map_column_type():
     assert table.to_spark_schema().jsonValue() == expected_schema
 
 
-def test_array_of_map_column_type():
+def test_array_of_maps_column_type():
+    table = (S.Schema()
+             .column()  # column1: map
+             .array("column1", MapType(StringType(), StringType())))
+
+    expected_schema = {'type': 'struct',
+                       'fields': [
+                           {'name': 'column1',
+                            'type': {'type': 'array',
+                                     'elementType': {'type': 'map',
+                                                     'keyType': 'string',
+                                                     'valueType': 'string',
+                                                     'valueContainsNull': True},
+                                     'containsNull': True},
+                            'nullable': False,
+                            'metadata': {}}]}
+
+    assert table.to_spark_schema().jsonValue() == expected_schema
+
+
+def test_struct_array_of_map_column_type():
     table = (S.Schema()
              .column()  # column1: map
              .array_struct("column1")

@@ -25,6 +25,12 @@ def default_exception_struct_fn(term, vocab):
     return su.build_string_field(term, vocab, nullable=True)
 
 
+def to_datatype(callable_or_data_type):
+    if callable(callable_or_data_type):
+        return callable_or_data_type()
+    return callable_or_data_type
+
+
 class RootParent:
     column_name = "__RootMeta__"
 
@@ -112,7 +118,7 @@ class Struct:
               term,
               scalar_type,
               nullable: bool = False):
-        self.fields.append(su.build_array_field(term, self.vocab, scalar_type(), nullable=nullable))
+        self.fields.append(su.build_array_field(term, self.vocab, to_datatype(scalar_type), nullable=nullable))
         return self
 
     def struct(self,
@@ -250,7 +256,7 @@ class Column:
               nullable: bool = False,
               validator: Callable = always_valid_validator,
               cell_builder: Callable = default_cell_builder):
-        self.schema = su.build_array_field(term, self.vocab, scalar_type(), nullable=nullable)
+        self.schema = su.build_array_field(term, self.vocab, to_datatype(scalar_type), nullable=nullable)
         return self.callback
 
     def kvMap(self,
@@ -262,7 +268,7 @@ class Column:
               cell_builder: Callable = default_cell_builder):
         self.schema = su.build_map_field(term,
                                          self.vocab,
-                                         key_scalar_type(),
+                                         to_datatype(key_scalar_type),
                                          value_scalar_type(),
                                          nullable=nullable)
         return self.callback
