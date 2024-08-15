@@ -241,6 +241,21 @@ class Column:
         self.schema = su.build_array_field(term, self.vocab, scalar_type(), nullable=nullable)
         return self.callback
 
+    def kvMap(self,
+              term,
+              key_scalar_type,
+              value_scalar_type,
+              nullable: bool = False,
+              validator: Callable = always_valid_validator,
+              cell_builder: Callable = default_cell_builder):
+        self.schema = su.build_map_field(term,
+                                         self.vocab,
+                                         key_scalar_type(),
+                                         value_scalar_type(),
+                                         nullable=nullable)
+        return self.callback
+
+
     def struct(self,
                term,
                nullable: bool = False,

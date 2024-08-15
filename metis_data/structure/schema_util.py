@@ -4,6 +4,7 @@ from pyspark.sql.types import (
     StringType,
     ArrayType,
     LongType,
+    MapType,
     ShortType,
     IntegerType,
     TimestampType,
@@ -54,9 +55,11 @@ def build_long_field(vocab_path, vocab, nullable) -> StructField:
     term, meta = V.term_and_meta(vocab_path, vocab)
     return build_field(term, LongType(), metadata=meta, nullable=nullable)
 
+
 def build_short_field(vocab_path, vocab, nullable) -> StructField:
     term, meta = V.term_and_meta(vocab_path, vocab)
     return build_field(term, ShortType(), metadata=meta, nullable=nullable)
+
 
 def build_integer_field(vocab_path, vocab, nullable) -> StructField:
     term, meta = V.term_and_meta(vocab_path, vocab)
@@ -71,6 +74,11 @@ def build_bool_field(vocab_path, vocab, nullable) -> StructField:
 def build_timestamp_field(vocab_path, vocab, nullable) -> StructField:
     term, meta = V.term_and_meta(vocab_path, vocab)
     return build_field(term, TimestampType(), metadata=meta, nullable=nullable)
+
+
+def build_map_field(vocab_path, vocab, key_struct_type, value_struct_type, nullable) -> StructField:
+    term, meta = V.term_and_meta(vocab_path, vocab)
+    return build_field(term, MapType(key_struct_type, value_struct_type), metadata=meta, nullable=nullable)
 
 
 def build_array_field(vocab_path, vocab, struct_type, nullable) -> StructField:

@@ -104,6 +104,21 @@ def test_column_structure_dsl():
     assert table.to_spark_schema().jsonValue() == expected_table_schema()
 
 
+def test_map_column_type():
+    table = (S.Schema()
+             .column()  # column1: map
+             .kvMap("column1Map", StringType, StringType, nullable=False))
+
+    expected_schema = {'type': 'struct',
+                       'fields': [
+                           {'name': 'column1Map',
+                            'type': {'type': 'map', 'keyType': 'string', 'valueType': 'string',
+                                     'valueContainsNull': True}, 'nullable': False,
+                            'metadata': {}}]}
+
+    assert table.to_spark_schema().jsonValue() == expected_schema
+
+
 def test_build_schema_at_column_level():
     c = S.Column(vocab.vocab())
 
@@ -214,15 +229,15 @@ def expected_table_schema():
                                                                                                   'elementType': {
                                                                                                       'type': 'struct',
                                                                                                       'fields': [{
-                                                                                                                     'name': 'sub_three_one',
-                                                                                                                     'type': 'string',
-                                                                                                                     'nullable': False,
-                                                                                                                     'metadata': {}},
-                                                                                                                 {
-                                                                                                                     'name': 'sub_three_two',
-                                                                                                                     'type': 'string',
-                                                                                                                     'nullable': False,
-                                                                                                                     'metadata': {}}]},
+                                                                                                          'name': 'sub_three_one',
+                                                                                                          'type': 'string',
+                                                                                                          'nullable': False,
+                                                                                                          'metadata': {}},
+                                                                                                          {
+                                                                                                              'name': 'sub_three_two',
+                                                                                                              'type': 'string',
+                                                                                                              'nullable': False,
+                                                                                                              'metadata': {}}]},
                                                                                                   'containsNull': True},
                                                                     'nullable': False, 'metadata': {}}]},
                                               'nullable': False, 'metadata': {}}]}, 'nullable': False, 'metadata': {}}]}
