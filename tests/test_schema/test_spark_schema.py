@@ -119,6 +119,33 @@ def test_map_column_type():
     assert table.to_spark_schema().jsonValue() == expected_schema
 
 
+def test_array_of_map_column_type():
+    table = (S.Schema()
+             .column()  # column1: map
+             .array_struct("column1")
+             .kvMap("column1Map", StringType, StringType, nullable=False)
+             .end_struct())
+
+    expected_schema = {'type': 'struct',
+                       'fields': [
+                           {'name': 'column1',
+                            'type': {'type': 'array',
+                                     'elementType': {'type': 'struct',
+                                                     'fields': [{
+                                                         'name': 'column1Map',
+                                                         'type': {
+                                                             'type': 'map',
+                                                             'keyType': 'string',
+                                                             'valueType': 'string',
+                                                             'valueContainsNull': True},
+                                                         'nullable': False,
+                                                         'metadata': {}}]},
+                                     'containsNull': True},
+                            'nullable': False,
+                            'metadata': {}}]}
+    assert table.to_spark_schema().jsonValue() == expected_schema
+
+
 def test_build_schema_at_column_level():
     c = S.Column(vocab.vocab())
 

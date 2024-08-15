@@ -57,6 +57,18 @@ class Struct:
         self.fields.append(su.build_string_field(term, self.vocab, nullable=nullable))
         return self
 
+    def kvMap(self,
+              term,
+              key_scalar_type,
+              value_scalar_type,
+              nullable: bool = False):
+        self.fields.append(su.build_map_field(term,
+                                              self.vocab,
+                                              key_scalar_type(),
+                                              value_scalar_type(),
+                                              nullable=nullable))
+        return self
+
     def decimal(self,
                 term,
                 decimal_type,
@@ -255,7 +267,6 @@ class Column:
                                          nullable=nullable)
         return self.callback
 
-
     def struct(self,
                term,
                nullable: bool = False,
@@ -325,7 +336,6 @@ class Schema:
         """
         self.columns.append(column)
         return self
-
 
     def to_spark_schema(self):
         return T.StructType(list(map(lambda column: column.schema, self.columns)))
