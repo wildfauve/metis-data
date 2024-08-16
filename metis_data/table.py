@@ -5,7 +5,7 @@ from delta.tables import *
 
 from metis_data import repo
 from . import namespace as ns
-from .util import error
+from .util import error, monad
 
 ReaderType = repo.DeltaTableReader
 WriterType = repo.DeltaTableWriter
@@ -116,6 +116,10 @@ class DomainTable:
     def read(self, reader_options=None) -> DataFrame:
         return self.reader.read(self, reader_options=reader_options)
 
+    def read_stream(self) -> DataFrame:
+        return self.stream_reader.read(self)
+
+    @monad.Try(error_cls=error.TableStreamReadError)
     def read_stream(self) -> DataFrame:
         return self.stream_reader.read(self)
 

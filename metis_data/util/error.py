@@ -3,6 +3,7 @@ from typing import Type
 
 from . import error_messages, monad, fn
 
+
 def generate_error(error_cls: Type[BaseError], msg_path: tuple[int, int], *template_args):
     code, _ = msg_path
     msg = fn.deep_get(error_messages.msgs, msg_path)
@@ -11,7 +12,6 @@ def generate_error(error_cls: Type[BaseError], msg_path: tuple[int, int], *templ
             return error_cls(msg.format(*template_args), code=code)
         return error_cls(msg, code=code)
     return error_cls("No message available", code=code)
-
 
 
 class BaseError(Exception):
@@ -40,6 +40,7 @@ class BaseError(Exception):
 
     def print(self):
         print(f"{self.message}\n\n{self.traceback}")
+
     ...
 
 
@@ -65,30 +66,41 @@ class MonadicErrorAggregate:
             print(f"{err.message}\n\n{err.traceback}\n\n")
 
 
-
 class InitialisationError(BaseError):
     ...
+
 
 class RepoConfigError(BaseError):
     ...
 
+
+class TableStreamReadError(BaseError):
+    ...
+
+
 class VocabNotFound(BaseError):
     ...
+
 
 class SchemaMatchingError(BaseError):
     ...
 
+
 class ConfigurationError(BaseError):
     ...
+
 
 class RepoWriteError(BaseError):
     ...
 
+
 class RepoConfigurationError(BaseError):
     ...
 
+
 class TransformerError(BaseError):
     ...
+
 
 class CloudFilesStreamingError(BaseError):
     ...
