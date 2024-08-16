@@ -120,7 +120,7 @@ class DomainTable:
         return self.stream_reader.read(self)
 
     @monad.Try(error_cls=error.TableStreamReadError)
-    def read_stream(self) -> DataFrame:
+    def try_read_stream(self) -> DataFrame:
         return self.stream_reader.read(self)
 
     def table_exists(self) -> bool:
