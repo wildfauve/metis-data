@@ -8,6 +8,7 @@ from pyspark.sql import types as T
 from pyspark.sql import dataframe
 from delta.tables import *
 
+from metis_data.repo import spark_util
 from metis_data.util import fn, monad
 
 
@@ -57,8 +58,10 @@ class DeltaTableReader(ReaderProtocol):
     """
     Delta reader using the DeltaTable class
     """
-
     default_reader_options = {ReaderSwitch.GENERATE_DF_ON}
+
+    def __init__(self, spark_options: list[spark_util.SparkOption] = None):
+        self.spark_options = spark_options if spark_options else []
 
     def read(self,
              repo,

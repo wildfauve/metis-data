@@ -36,8 +36,12 @@ from .session import (
 )
 
 from .repo import (
+    CheckpointLocal,
+    CheckpointVolume,
+    DeltaCheckpoint,
     DataAgreementType,
     DatabricksCloudFilesStreamer,
+    DeltaStreamReader,
     DeltaStreamingTableWriter,
     TableProperty,
     SparkOption,
@@ -46,9 +50,6 @@ from .repo import (
 )
 
 from .cloud_files import (
-    CheckpointLocal,
-    CheckpointVolume,
     CloudFiles,
-    DeltaCheckpoint,
     S3ExternalVolumeSource
 )

@@ -15,26 +15,6 @@ CloudFilesStreamWriter = repo.SparkStreamingTableWriter | repo.DeltaStreamingTab
 
 
 @dataclass
-class CheckpointVolume:
-    ns: metis_data.NameSpace
-
-    def __post_init__(self):
-        self.ns.create_checkpoint_volume(self)
-
-
-
-@dataclass
-class DeltaCheckpoint(CheckpointVolume):
-    name: str
-
-
-@dataclass
-class CheckpointLocal(CheckpointVolume):
-    name: str
-    path: str
-
-
-@dataclass
 class S3ExternalVolumeSource:
     ns: metis_data.NameSpace
     name: str
@@ -56,7 +36,7 @@ class CloudFiles:
                  namespace: ns.NameSpace,
                  stream_reader: CloudFilesStreamReader,
                  cloud_source: S3ExternalVolumeSource,
-                 checkpoint_volume: CheckpointVolume,
+                 checkpoint_volume: repo.CheckpointVolume,
                  schema: types.StructType,
                  stream_writer: CloudFilesStreamWriter,
                  stream_to_table_name: str = None,

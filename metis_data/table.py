@@ -80,13 +80,17 @@ class DomainTable:
 
     def __init__(self,
                  namespace: ns.NameSpace = None,
-                 reader: ReaderType = repo.DeltaTableReader,
-                 writer: WriterType = repo.DeltaTableWriter,
-                 stream_writer: StreamWriter = repo.DeltaStreamingTableWriter,
+                 checkpoint_volume: repo.CheckpointVolume = None,
+                 reader: ReaderType = repo.DeltaTableReader(),
+                 writer: WriterType = repo.DeltaTableWriter(),
+                 stream_reader: StreamReader = repo.DeltaStreamReader(),
+                 stream_writer: StreamWriter = repo.DeltaStreamingTableWriter(),
                  table_creation_protocol=CreateManagedDeltaTable):
         self.namespace = namespace
         self.reader = reader
         self.writer = writer
+        self.checkpoint_volume = checkpoint_volume
+        self.stream_reader = stream_reader
         self.stream_writer = stream_writer
         self.table_creation_protocol = table_creation_protocol
 
@@ -98,13 +102,25 @@ class DomainTable:
         self.properties = self.property_manager  # hides, a little, the class managing properties.
         self.after_initialise()  # callback Hook
 
+    @property
+    def spark_session(self):
+        return self.namespace.session
+
+    @property
+    def checkpoint_location(self):
+        if not self.checkpoint_volume:
+            return None
+        return self.namespace.catalogue_strategy.checkpoint_volume(self)
+
+    def to_table_name(self):
+        return self.fully_qualified_table_name()
+
     @init_schema_on_read
     def read(self, reader_options=None) -> DataFrame:
-        return self.reader().read(self, reader_options=reader_options)
+        return self.reader.read(self, reader_options=reader_options)
 
-    def write_stream(self, df) -> DataFrame:
-        return self.stream_writer.write_stream(df, self)
-
+    def read_stream(self) -> DataFrame:
+        return self.stream_reader.read(self)
 
     def table_exists(self) -> bool:
         return self.namespace.table_exists(self.__class__.table_name)
@@ -144,8 +160,11 @@ class DomainTable:
         return self.db.session.createDataFrame(data=data,
                                                schema=self.determine_schema_to_use_for_df(schema))
 
+    def write_stream(self, df) -> DataFrame:
+        return self.stream_writer.write_stream(df, self)
+
     def try_write_append(self, df, options: Optional[List[repo.SparkOption]] = []):
-        result = self.writer().try_write_append(self, df, options)
+        result = self.writer.try_write_append(self, df, options)
         self.after_append(result)
         return result
 
@@ -157,10 +176,10 @@ class DomainTable:
         if not self.table_exists():
             return self.try_write_append(df)
 
-        result = self.writer().try_upsert(self,
-                                          self.read(reader_options={repo.ReaderSwitch.GENERATE_DF_OFF}),
-                                          df,
-                                          options)
+        result = self.writer.try_upsert(self,
+                                        self.read(reader_options={repo.ReaderSwitch.GENERATE_DF_OFF}),
+                                        df,
+                                        options)
 
         self.after_upsert()  # callback hook.
 

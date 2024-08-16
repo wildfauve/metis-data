@@ -33,19 +33,23 @@ class DeltaStreamingTableWriter:
 
     def write_stream(self,
                      streaming_df,
-                     stream_reader):
-        return self._write_stream_append_only(streaming_df, stream_reader)
+                     stream_coordinator):
+        """
+        The Stream Coordinator is either A CloudFiles instance or a Domain Table instance.  When streaming from an
+        external file source, it will be a CloudFile.  When streaming from a Delta table, it will be a DomainTable.
+        """
+        return self._write_stream_append_only(streaming_df, stream_coordinator)
 
     def _write_stream_append_only(self,
                                   streaming_df,
-                                  stream_reader):
+                                  stream_coordinator):
         opts = {**spark_util.SparkOption.function_based_options(self.spark_options if self.spark_options else []),
-                **{'checkpointLocation': stream_reader.checkpoint_location}}
+                **{'checkpointLocation': stream_coordinator.checkpoint_location}}
         streaming_query = (streaming_df.writeStream
                            .format(self.__class__.format)
                            .outputMode("append")
                            .options(**opts)
                            .trigger(**self.__class__.default_stream_trigger_condition)
-                           .toTable(stream_reader.to_table_name()))
+                           .toTable(stream_coordinator.to_table_name()))
         streaming_query.awaitTermination()
         return streaming_query
