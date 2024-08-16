@@ -9,6 +9,8 @@ from .util import error
 
 ReaderType = repo.DeltaTableReader
 WriterType = repo.DeltaTableWriter
+StreamReader = repo.SparkRecursiveFileStreamer | repo.DatabricksCloudFilesStreamer
+StreamWriter = repo.SparkStreamingTableWriter | repo.DeltaStreamingTableWriter
 
 
 def init_schema_on_read(f):
@@ -80,10 +82,12 @@ class DomainTable:
                  namespace: ns.NameSpace = None,
                  reader: ReaderType = repo.DeltaTableReader,
                  writer: WriterType = repo.DeltaTableWriter,
+                 stream_writer: StreamWriter = repo.DeltaStreamingTableWriter,
                  table_creation_protocol=CreateManagedDeltaTable):
         self.namespace = namespace
         self.reader = reader
         self.writer = writer
+        self.stream_writer = stream_writer
         self.table_creation_protocol = table_creation_protocol
 
         self.property_manager = repo.properties.TablePropertyManager(
@@ -97,6 +101,10 @@ class DomainTable:
     @init_schema_on_read
     def read(self, reader_options=None) -> DataFrame:
         return self.reader().read(self, reader_options=reader_options)
+
+    def write_stream(self, df) -> DataFrame:
+        return self.stream_writer.write_stream(df, self)
+
 
     def table_exists(self) -> bool:
         return self.namespace.table_exists(self.__class__.table_name)
