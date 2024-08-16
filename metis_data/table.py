@@ -80,7 +80,6 @@ class DomainTable:
 
     def __init__(self,
                  namespace: ns.NameSpace = None,
-                 checkpoint_volume: repo.CheckpointVolume = None,
                  reader: ReaderType = repo.DeltaTableReader(),
                  writer: WriterType = repo.DeltaTableWriter(),
                  stream_reader: StreamReader = repo.DeltaStreamReader(),
@@ -89,7 +88,6 @@ class DomainTable:
         self.namespace = namespace
         self.reader = reader
         self.writer = writer
-        self.checkpoint_volume = checkpoint_volume
         self.stream_reader = stream_reader
         self.stream_writer = stream_writer
         self.table_creation_protocol = table_creation_protocol
@@ -108,9 +106,8 @@ class DomainTable:
 
     @property
     def checkpoint_location(self):
-        if not self.checkpoint_volume:
-            return None
-        return self.namespace.catalogue_strategy.checkpoint_volume(self)
+        return self.namespace.catalogue_strategy.checkpoint_volume(self.namespace.cfg.checkpoint_volume,
+                                                                   self.table_name)
 
     def to_table_name(self):
         return self.fully_qualified_table_name()

@@ -7,6 +7,8 @@ from metis_data import namespace
 from . import *
 from . import di
 
+CHECKPOINT_PATH = "tests/spark_locations"
+
 table_schema = T.StructType(
     [
         T.StructField('id', T.StringType(), True),
@@ -54,7 +56,8 @@ def dp1_cfg_ns():
                                data_product="dp1",
                                service_name="test-runner",
                                catalogue_mode=metis_data.CatalogueMode.SPARK,
-                               checkpoint_name="checkpoints",
+                               checkpoint_volume=metis_data.CheckpointVolumeWithPath(name="checkpoints",
+                                                                                     path=CHECKPOINT_PATH),
                                namespace_strategy_cls=SparkCatalogueStrategyForTesting)
 
     namespace = metis_data.NameSpace(session=spark_test_session.spark_session(),
@@ -89,9 +92,8 @@ class SparkCatalogueStrategyForTesting(namespace.SparkCatalogueStrategy):
     def __init__(self, session, cfg):
         super().__init__(session, cfg)
 
-    def checkpoint_volume(self, ns: metis_data.CloudFiles) -> str:
-        return f"{ns.checkpoint_volume.path}/{self.checkpoint_name()}"
-
+    def checkpoint_volume(self, root: metis_data.CheckpointVolumeRoot, name: str) -> str:
+        return f"{root.path}/{root.name}/{name}"
 
 
 class MyTable2(metis_data.DomainTable):

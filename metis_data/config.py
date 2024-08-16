@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 
-from metis_data import namespace
+from metis_data import namespace, repo
 
 normalise_pattern = pattern = re.compile(r'(?<!^)(?=[A-Z])')
 
@@ -24,7 +24,7 @@ class Config:
     data_product: str
     service_name: str
     catalogue_mode: CatalogueMode = field(default_factory=lambda: CatalogueMode.UNITY)
-    checkpoint_name: str | None = None
+    checkpoint_volume: repo.CheckpointVolumeRoot | None = None
     namespace_strategy_cls: namespace.CatalogueStrategyProtocol | None = None
 
     def __post_init__(self):

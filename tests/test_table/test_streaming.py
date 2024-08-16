@@ -29,15 +29,10 @@ def test_cloud_files_streaming(di_initialise_spark,
                                                 source=stream_source,
                                                 external_bucket="s3://bucket/folder")
 
-    checkpoint_vol = metis_data.CheckpointLocal(ns=dataproduct1_ns,
-                                                name=checkpoint_name,
-                                                path=checkpoint_loc)
-
     cloud_files = metis_data.CloudFiles(spark_session=session,
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
                                         cloud_source=ext_vol,
-                                        checkpoint_volume=checkpoint_vol,
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.SparkStreamingTableWriter(opts),
                                         stream_to_table_name="dp1.sketch")
@@ -91,18 +86,12 @@ def test_delta_table_streaming(di_initialise_spark,
                                dataproduct1_ns):
     opts = [metis_data.SparkOption.MERGE_SCHEMA]
 
-    checkpoint_vol = metis_data.CheckpointLocal(ns=dataproduct1_ns,
-                                                name=checkpoint_name,
-                                                path=checkpoint_loc)
-
     table_cls = namespaces_and_tables.my_table_cls()
 
     source_table = table_cls(namespace=dataproduct1_ns,
-                             checkpoint_volume=checkpoint_vol,
                              stream_reader=metis_data.DeltaStreamReader())
 
     stream_to_table = namespaces_and_tables.MyTable2(namespace=dataproduct1_ns,
-                                                     checkpoint_volume=checkpoint_vol,
                                                      stream_writer=metis_data.DeltaStreamingTableWriter(opts))
     source_table.try_write_append(data.my_table_df())
 

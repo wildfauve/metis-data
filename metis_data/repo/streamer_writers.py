@@ -12,14 +12,14 @@ class SparkStreamingTableWriter:
 
     def write_stream(self,
                      streaming_df,
-                     stream_reader):
+                     stream_coordinator):
         opts = {**spark_util.SparkOption.function_based_options(self.spark_options if self.spark_options else []),
-                **{'checkpointLocation': stream_reader.checkpoint_location}}
+                **{'checkpointLocation': stream_coordinator.checkpoint_location}}
         streaming_query = (streaming_df
                            .writeStream
                            .options(**opts)
                            .trigger(**self.__class__.default_stream_trigger_condition)
-                           .toTable(stream_reader.stream_to_table_name))
+                           .toTable(stream_coordinator.stream_to_table_name))
         streaming_query.awaitTermination()
         return streaming_query
 

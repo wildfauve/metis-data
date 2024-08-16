@@ -36,9 +36,8 @@ from .session import (
 )
 
 from .repo import (
-    CheckpointLocal,
-    CheckpointVolume,
-    DeltaCheckpoint,
+    CheckpointVolumeRoot,
+    CheckpointVolumeWithPath,
     DataAgreementType,
     DatabricksCloudFilesStreamer,
     DeltaStreamReader,

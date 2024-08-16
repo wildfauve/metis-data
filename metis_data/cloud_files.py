@@ -36,7 +36,6 @@ class CloudFiles:
                  namespace: ns.NameSpace,
                  stream_reader: CloudFilesStreamReader,
                  cloud_source: S3ExternalVolumeSource,
-                 checkpoint_volume: repo.CheckpointVolume,
                  schema: types.StructType,
                  stream_writer: CloudFilesStreamWriter,
                  stream_to_table_name: str = None,
@@ -45,7 +44,6 @@ class CloudFiles:
         self.namespace = namespace
         self.stream_reader = stream_reader
         self.cloud_source = cloud_source
-        self.checkpoint_volume = checkpoint_volume
         self.schema = schema
         self.stream_writer = stream_writer
         self.stream_to_table_name = stream_to_table_name
@@ -69,4 +67,8 @@ class CloudFiles:
 
     @property
     def checkpoint_location(self):
-        return self.namespace.catalogue_strategy.checkpoint_volume(self)
+        return self.namespace.catalogue_strategy.checkpoint_volume(self.namespace.cfg.checkpoint_volume,
+                                                                   self._checkpoint_name_from_table_name())
+
+    def _checkpoint_name_from_table_name(self):
+        return self.to_table_name().split('.')[-1]

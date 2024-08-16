@@ -67,12 +67,12 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         logger.info(f"{self.__class__.__name__}.create: {self.namespace_name}")
         return self
 
-    def create_checkpoint_volume(self, checkpoint_volume: metis_data.CheckpointLocal):
+    def create_checkpoint_volume(self, checkpoint_root: metis_data.CheckpointVolumeRoot):
         """
         Where the checkpoint is in local, normally test, mode, the folder is created.
         No other strategy is supported aside from local create.
         """
-        checkpoint_path = Path(checkpoint_volume.path) / checkpoint_volume.name
+        checkpoint_path = Path(checkpoint_root.path) / checkpoint_root.name
         logger.info(
             f"{self.__class__.__name__}.create_checkpoint_volume: {str(checkpoint_path)}")
 
@@ -117,12 +117,12 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
     def data_product_root(self) -> str:
         return self.namespace_name
 
-    def checkpoint_volume(self, ns=None) -> str:
-        return f"/Volumes/{self.catalogue}/{self.namespace_name}/checkpoints/{self.checkpoint_name()}"
+    def checkpoint_volume(self, root: metis_data.CheckpointVolumeRoot, name: str) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/{root.name}/{name}"
 
 
 class UnityCatalogueStrategy(CatalogueStrategyProtocol):
-    default_checkpoint_name = "checkpoints"
+
     def __init__(self, session, cfg: config.Config):
         self.session = session
         self.cfg = cfg
@@ -138,7 +138,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return self
 
     def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
-        expr = sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume())
+        expr = sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume(checkpoint_volume.name))
         logger.info(
             f"{self.__class__.__name__}.create_checkpoint_volume: {expr.value}")
 
@@ -182,8 +182,8 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def fully_qualified_volume_name(self, volume_name):
         return f"{self.data_product_root}.{volume_name}"
 
-    def fully_qualified_checkpoint_volume(self):
-        return f"{self.data_product_root}.{self.__class__.default_checkpoint_name}"
+    def fully_qualified_checkpoint_volume(self, name):
+        return f"{self.data_product_root}.{name}"
 
 
     def fully_qualified_schema_name(self):
@@ -193,8 +193,8 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def data_product_root(self) -> str:
         return f"{self.catalogue}.{self.namespace_name}"
 
-    def checkpoint_volume(self, ns=None) -> str:
-        return f"/Volumes/{self.catalogue}/{self.namespace_name}/{self.__class__.default_checkpoint_name}/{self.checkpoint_name()}"
+    def checkpoint_volume(self, root: metis_data.CheckpointVolumeRoot, name: str) -> str:
+        return f"/Volumes/{self.catalogue}/{self.namespace_name}/{root.name}/{name}"
 
 
 class NameSpace:
@@ -213,7 +213,8 @@ class NameSpace:
         self.session = session
         self.cfg = cfg
         self.catalogue_strategy = self.determine_naming_convention()
-        self.create_if_not_exists()
+        self.create_schema_if_not_exists()
+        self.create_checkpoint_root_volume()
 
     def determine_naming_convention(self):
         if self.cfg.namespace_strategy_cls:
@@ -229,7 +230,7 @@ class NameSpace:
     #
     # DB LifeCycle Functions
     #
-    def create_if_not_exists(self):
+    def create_schema_if_not_exists(self):
         self.catalogue_strategy.create(props=self.property_expr(), if_not_exists=True)
 
     def drop(self):
@@ -240,8 +241,8 @@ class NameSpace:
         self.catalogue_strategy.create_external_volume(volume_source)
         return self
 
-    def create_checkpoint_volume(self, checkpoint_volume: metis_data.CheckpointVolume):
-        self.catalogue_strategy.create_checkpoint_volume(checkpoint_volume)
+    def create_checkpoint_root_volume(self):
+        self.catalogue_strategy.create_checkpoint_volume(self.cfg.checkpoint_volume)
         return self
 
     def fully_qualified_table_name(self, table_name):

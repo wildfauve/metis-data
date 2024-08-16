@@ -11,6 +11,7 @@ docs/http/*.private.env.json
 **/.idea
 # test hive dbs
 spark-warehouse/
+tests/spark_locations
 metastore_db/
 
 # PySpark

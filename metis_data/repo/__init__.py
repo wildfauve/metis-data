@@ -28,7 +28,6 @@ from .streamer_writers import (
 )
 
 from .volume import (
-    CheckpointVolume,
-    CheckpointLocal,
-    DeltaCheckpoint
+    CheckpointVolumeRoot,
+    CheckpointVolumeWithPath
 )
