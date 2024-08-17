@@ -50,11 +50,12 @@ class CloudFiles:
         self.stream_to_table = stream_to_table
 
     @monad.Try(error_cls=error.CloudFilesStreamingError)
-    def try_read_stream(self) -> dataframe.DataFrame:
-        return self.read_stream()
+    def try_read_stream(self, reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> dataframe.DataFrame:
+        return self.read_stream(reader_opts)
 
-    def read_stream(self) -> dataframe.DataFrame:
-        return self.stream_reader.read_stream(self)
+    def read_stream(self,
+                    reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> dataframe.DataFrame:
+        return self.stream_reader.read_stream(self, reader_opts)
 
     def write_stream(self, df) -> dataframe.DataFrame:
         return self.stream_writer.write_stream(df, self)

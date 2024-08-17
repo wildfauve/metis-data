@@ -81,7 +81,8 @@ class SparkRecursiveFileStreamer:
         self.spark_options = spark_options if spark_options else []
 
     def read_stream(self,
-                    cloud_file: metis_data.CloudFiles,):
+                    cloud_file: metis_data.CloudFiles,
+                    reader_options: Optional[set[ReaderSwitch]] = None):
         return (cloud_file.spark_session
                 .readStream
                 .options(**self._spark_opts())
@@ -115,7 +116,8 @@ class DatabricksCloudFilesStreamer:
 
 
     def read_stream(self,
-                    cloud_file: metis_data.CloudFiles):
+                    cloud_file: metis_data.CloudFiles,
+                    reader_options: Optional[set[ReaderSwitch]] = None):
         return (cloud_file.spark_session
                 .readStream
                 .format(self.__class__.format)

@@ -58,15 +58,10 @@ def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
                                                 source=stream_source,
                                                 external_bucket="s3://bucket/folder")
 
-    checkpoint_vol = metis_data.CheckpointLocal(ns=dataproduct1_ns,
-                                                name=checkpoint_name,
-                                                path=checkpoint_loc)
-
     cloud_files = metis_data.CloudFiles(spark_session=spark_test_session.spark_session(),
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
                                         cloud_source=ext_vol,
-                                        checkpoint_volume=checkpoint_vol,
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_writer=metis_data.DeltaStreamingTableWriter(),
                                         stream_to_table=sketches_table)

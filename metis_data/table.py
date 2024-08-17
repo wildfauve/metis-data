@@ -116,12 +116,14 @@ class DomainTable:
     def read(self, reader_options=None) -> DataFrame:
         return self.reader.read(self, reader_options=reader_options)
 
-    def read_stream(self) -> DataFrame:
-        return self.stream_reader.read(self)
+    def read_stream(self,
+                    reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> DataFrame:
+        return self.stream_reader.read(self, reader_opts)
 
     @monad.Try(error_cls=error.TableStreamReadError)
-    def try_read_stream(self) -> DataFrame:
-        return self.stream_reader.read(self)
+    def try_read_stream(self,
+                        reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> DataFrame:
+        return self.read_stream(self, reader_opts)
 
     def table_exists(self) -> bool:
         return self.namespace.table_exists(self.__class__.table_name)
@@ -161,8 +163,18 @@ class DomainTable:
         return self.db.session.createDataFrame(data=data,
                                                schema=self.determine_schema_to_use_for_df(schema))
 
-    def write_stream(self, df) -> DataFrame:
-        return self.stream_writer.write_stream(df, self)
+    def write_stream(self,
+                     df,
+                     trigger_condition: dict = None,
+                     spark_options: Optional[list[repo.SparkOption]] = None) -> DataFrame:
+        return self.stream_writer.write_stream(df, self, trigger_condition, spark_options)
+
+    @monad.Try(error_cls=error.RepoWriteError)
+    def try_write_stream(self,
+                         df,
+                         trigger_condition: dict = None,
+                         spark_options: Optional[list[repo.SparkOption]] = None) -> DataFrame:
+        return self.stream_writer.write_stream(df, self, trigger_condition, spark_options)
 
     def try_write_append(self, df, options: Optional[List[repo.SparkOption]] = []):
         result = self.writer.try_write_append(self, df, options)
