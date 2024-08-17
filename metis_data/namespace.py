@@ -225,7 +225,7 @@ class NameSpace:
             case config.CatalogueMode.UNITY:
                 return UnityCatalogueStrategy(self.session, self.cfg)
             case _:
-                raise error.generate_error(error.ConfigurationError, (422, 1))
+                raise error.generate_error(error.ConfigurationError, ("namespace", 1))
 
     #
     # DB LifeCycle Functions

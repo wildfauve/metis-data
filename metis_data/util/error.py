@@ -4,14 +4,15 @@ from typing import Type
 from . import error_messages, monad, fn
 
 
-def generate_error(error_cls: Type[BaseError], msg_path: tuple[int, int], *template_args):
-    code, _ = msg_path
-    msg = fn.deep_get(error_messages.msgs, msg_path)
+
+def generate_error(error_cls: Type[BaseError], msg_path: tuple[str, int], *template_args):
+    topic, _ = msg_path
+    msg = fn.deep_get(error_messages.msgs, list(msg_path))
     if msg:
         if len(template_args) == msg.count("{"):
-            return error_cls(msg.format(*template_args), code=code)
-        return error_cls(msg, code=code)
-    return error_cls("No message available", code=code)
+            return error_cls(msg.format(*template_args))
+        return error_cls(msg)
+    return error_cls("No message available")
 
 
 class BaseError(Exception):
@@ -103,4 +104,12 @@ class TransformerError(BaseError):
 
 
 class CloudFilesStreamingError(BaseError):
+    ...
+
+
+class NotAStreamError(BaseError):
+    ...
+
+
+class StreamerTransformerError(BaseError):
     ...

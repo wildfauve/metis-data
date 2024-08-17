@@ -77,8 +77,8 @@ def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
     assert sketch_df.count() == 4
 
 
-def test_delta_table_streaming(di_initialise_spark,
-                               dataproduct1_ns):
+def test_delta_table_streaming_flow(di_initialise_spark,
+                                    dataproduct1_ns):
     opts = [metis_data.SparkOption.MERGE_SCHEMA]
 
     table_cls = namespaces_and_tables.my_table_cls()
@@ -101,3 +101,35 @@ def test_delta_table_streaming(di_initialise_spark,
     df3 = stream_to_table.read()
 
     assert [row.onStream for row in df3.select('onStream').collect()] == ['true', 'true']
+
+
+def test_stream_using_streamer(di_initialise_spark,
+                               dataproduct1_ns):
+    def transform_fn(df):
+        return df.withColumn('onStream', lit("true"))
+
+    opts = [metis_data.SparkOption.MERGE_SCHEMA]
+
+    table_cls = namespaces_and_tables.my_table_cls()
+
+    source_table = table_cls(namespace=dataproduct1_ns,
+                             stream_reader=metis_data.DeltaStreamReader())
+
+    stream_to_table = namespaces_and_tables.MyTable2(namespace=dataproduct1_ns,
+                                                     stream_writer=metis_data.DeltaStreamingTableWriter(opts))
+    source_table.try_write_append(data.my_table_df())
+
+    stream = (metis_data.Streamer()
+              .stream_from(source_table,
+                           stream_from_reader_options={metis_data.ReaderSwitch.READ_STREAM_WITH_SCHEMA_ON})
+              .stream_to(table=stream_to_table,
+                         write_type=metis_data.StreamWriteType.APPEND)
+              .with_transformer(transform_fn))
+
+    result = stream.run()
+
+    assert result.is_right()
+
+    df = stream_to_table.read()
+
+    assert [row.onStream for row in df.select('onStream').collect()] == ['true', 'true']

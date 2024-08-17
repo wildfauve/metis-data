@@ -76,7 +76,7 @@ class DeltaTableWriter(WriterProtocol):
                                                       table.merge_condition(),
                                                       table.prune_on()))
                     .whenNotMatchedInsertAll())
-        # Note that the conditions appear to return a new version of te upserter, rather than mutating the merge
+        # Note that the conditions appear to return a new version of the upserter, rather than mutating the merge
         # class.  Therefore, to apply the UpdateAll and Delete conditionally, the upserter var needs to be updated with
         # the new version of the merge class.
         # TODO: a better approach might be a reduce(condition_applier, [whenMatchedUpdateAll, whenMatchedDelete], upserter)
@@ -95,7 +95,7 @@ class DeltaTableWriter(WriterProtocol):
                               merge_conditions: Callable,
                               partition_pruning_col):
         if not merge_conditions:
-            raise error.generate_error(error.RepoConfigurationError, (422, 3))
+            raise error.generate_error(error.RepoConfigurationError, ("writers", 3))
 
         pruning_cond = self._build_puning_condition(name_of_baseline, update_name, partition_pruning_col)
 

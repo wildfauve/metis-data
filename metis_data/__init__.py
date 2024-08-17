@@ -43,6 +43,7 @@ from .repo import (
     DeltaStreamReader,
     DeltaStreamingTableWriter,
     TableProperty,
+    ReaderSwitch,
     SparkOption,
     SparkRecursiveFileStreamer,
     SparkStreamingTableWriter
@@ -51,4 +52,10 @@ from .repo import (
 from .cloud_files import (
     CloudFiles,
     S3ExternalVolumeSource
+)
+
+from .streamer import (
+    Streamer,
+    StreamState,
+    StreamWriteType
 )

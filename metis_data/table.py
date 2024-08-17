@@ -23,7 +23,7 @@ def init_schema_on_read(f):
     def func(*args, **kwargs):
         df = f(*args, **kwargs)
         if not isinstance(df, DataFrame):
-            error.generate_error(error.RepoConfigError, (500, 1))
+            error.generate_error(error.RepoConfigError, ('cfg', 1))
         cls = args[0].__class__
         if cls.schema:
             return df
@@ -113,8 +113,8 @@ class DomainTable:
         return self.fully_qualified_table_name()
 
     @init_schema_on_read
-    def read(self, reader_options=None) -> DataFrame:
-        return self.reader.read(self, reader_options=reader_options)
+    def read(self, reader_opts=None) -> DataFrame:
+        return self.reader.read(self, reader_opts=reader_opts)
 
     def read_stream(self,
                     reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> DataFrame:
@@ -123,7 +123,7 @@ class DomainTable:
     @monad.Try(error_cls=error.TableStreamReadError)
     def try_read_stream(self,
                         reader_opts: Optional[set[repo.ReaderSwitch]] = None) -> DataFrame:
-        return self.read_stream(self, reader_opts)
+        return self.read_stream(reader_opts)
 
     def table_exists(self) -> bool:
         return self.namespace.table_exists(self.__class__.table_name)
@@ -143,7 +143,7 @@ class DomainTable:
     def perform_table_creation_protocol(self):
         if (not self.table_creation_protocol and not self.__class__.table_creation_protocol
                 or not self.__class__.schema):
-            raise error.generate_error(error.RepoConfigurationError, (422, 2))
+            raise error.generate_error(error.RepoConfigurationError, ("table", 2))
         if self.table_creation_protocol:
             self.table_creation_protocol().perform(self)
         else:
@@ -190,7 +190,7 @@ class DomainTable:
             return self.try_write_append(df)
 
         result = self.writer.try_upsert(self,
-                                        self.read(reader_options={repo.ReaderSwitch.GENERATE_DF_OFF}),
+                                        self.read(reader_opts={repo.ReaderSwitch.GENERATE_DF_OFF}),
                                         df,
                                         options)
 

@@ -1,6 +1,5 @@
 from .readers import (
-    DeltaTableReader,
-    ReaderSwitch
+    DeltaTableReader
 )
 
 from .properties import (
@@ -10,6 +9,10 @@ from .properties import (
 
 from .spark_util import (
     SparkOption
+)
+
+from .reader_options import (
+    ReaderSwitch
 )
 
 from .writers import (
