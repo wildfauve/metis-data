@@ -229,6 +229,7 @@ def test_mix_dsl_and_independent_columns():
 
     assert table.to_spark_schema().jsonValue() == expected_schema
 
+
 def test_independent_struct():
     col_with_nested_struct = S.Column()
 
@@ -247,6 +248,35 @@ def test_independent_struct():
     table2 = S.Schema().add_column(col_with_independent_struct)
 
     assert table1.to_spark_schema().jsonValue() == table2.to_spark_schema().jsonValue()
+
+
+def test_independent_struct_to_struct():
+    col1 = (S.Column()
+            .struct('struct1', nullable=False)
+            .struct('struct1.1', nullable=False)
+            .string('s1.1', nullable=False)
+            .end_struct()
+            .struct('struct1.2', nullable=False)
+            .string('s1.2', nullable=False)
+            .end_struct()
+            .end_struct())
+
+    independent_struct_1 = (S.Struct(term='struct1.1', nullable=False)
+                            .string('s1.1', nullable=False)
+                            .end_struct())
+
+    independent_struct_2 = (S.Struct(term='struct1.2', nullable=False)
+                            .string('s1.2', nullable=False)
+                            .end_struct())
+
+    nested_struct = (S.Struct(term='struct1', nullable=False)
+                     .add_struct(independent_struct_1)
+                     .add_struct(independent_struct_2))
+
+    col_with_independent_struct = S.Column().add_struct(nested_struct)
+
+    assert col1.to_spark_schema().jsonValue() == col_with_independent_struct.to_spark_schema().jsonValue()
+
 
 # Helpers
 

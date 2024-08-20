@@ -160,6 +160,13 @@ class Struct:
                                          self.nullable)
         return self.callback(T.StructType(self.fields))
 
+    def add_struct(self, struct: T.StructField):
+        """
+        Adds an independently defined struct to the self struct
+        """
+        self.fields.append(struct)
+        return self
+
 
 class Column:
 
@@ -172,6 +179,7 @@ class Column:
                  cell_builder: Callable = default_cell_builder):
         self.vocab_term = vocab_term
         self.vocab = vocab
+        self.term = None
         self.struct_fn = struct_fn
         self.validator = validator
         self.cell_builder = cell_builder
@@ -206,15 +214,6 @@ class Column:
         return self.__class__(vocab_term=self.vocab_term,
                               vocab=self.vocab,
                               struct_fn=default_exception_struct_fn)
-
-    def add_struct(self, struct: Struct):
-        """
-        Add a struct which has been built independently of the schema DSL.
-        :param struct:
-        :return:
-        """
-        self.schema = struct
-        return self._callback_or_self()
 
     def _callback_or_self(self):
         if self.callback:
@@ -312,7 +311,22 @@ class Column:
 
     def end_struct(self, struct_type):
         self.schema = su.build_struct_field(self.term, self.vocab, struct_type, self.nullable)
-        return self.callback
+        return self._callback_or_self()
+
+    def add_struct(self, struct: Struct):
+        """
+        Add a struct which has been built independently of the schema DSL.
+        The struct is the only structure in the column (as it's a struct which can not have
+        additional scalar properties).
+        :param struct:
+        :return:
+        """
+        self.schema = su.build_struct_field(struct.term,
+                                            struct.vocab,
+                                            T.StructType(struct.fields),
+                                            struct.nullable)
+        return self._callback_or_self()
+
 
     def array_struct(self,
                      term,
