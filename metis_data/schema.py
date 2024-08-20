@@ -154,11 +154,14 @@ class Struct:
         When no callback, a struct is being built independently of a column or another struct.
         """
         if not self.callback:
-            return su.build_struct_field(self.term,
-                                         self.vocab,
-                                         T.StructType(self.fields),
-                                         self.nullable)
+            return self.build_as_struct_type()
         return self.callback(T.StructType(self.fields))
+
+    def build_as_struct_type(self):
+        return su.build_struct_field(self.term,
+                                     self.vocab,
+                                     T.StructType(self.fields),
+                                     self.nullable)
 
     def add_struct(self, struct: T.StructField):
         """
@@ -321,12 +324,8 @@ class Column:
         :param struct:
         :return:
         """
-        self.schema = su.build_struct_field(struct.term,
-                                            struct.vocab,
-                                            T.StructType(struct.fields),
-                                            struct.nullable)
+        self.schema = struct.build_as_struct_type()
         return self._callback_or_self()
-
 
     def array_struct(self,
                      term,

@@ -240,8 +240,7 @@ def test_independent_struct():
     table1 = S.Schema().add_column(col_with_nested_struct)
 
     independent_struct = (S.Struct(term='struct1', nullable=False)
-                          .string('s1', nullable=False)
-                          .end_struct())
+                          .string('s1', nullable=False))
 
     col_with_independent_struct = S.Column().add_struct(independent_struct)
 
