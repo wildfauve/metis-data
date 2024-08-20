@@ -61,6 +61,7 @@ class Struct:
         self.term = term
         self.nullable = False
         self.schema = None
+        self.nullable = nullable
         self.fields = []
 
     def string(self,
