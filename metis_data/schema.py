@@ -51,9 +51,15 @@ class Vocab:
 
 
 class Struct:
-    def __init__(self, callback, vocab: Dict):
+    def __init__(self,
+                 callback=None,
+                 vocab: dict | str = None,
+                 term: str = None,
+                 nullable: bool = None):
         self.callback = callback
         self.vocab = vocab
+        self.term = term
+        self.nullable = False
         self.schema = None
         self.fields = []
 
@@ -144,6 +150,14 @@ class Struct:
         return self
 
     def end_struct(self):
+        """
+        When no callback, a struct is being built independently of a column or another struct.
+        """
+        if not self.callback:
+            return su.build_struct_field(self.term,
+                                         self.vocab,
+                                         T.StructType(self.fields),
+                                         self.nullable)
         return self.callback(T.StructType(self.fields))
 
 
@@ -169,7 +183,7 @@ class Column:
     def to_spark_schema(self, as_root=True) -> T.StructType | T.StructField:
         """
         A Column can be created externally from a Schema object and then added to the schema,
-        or used for transformation functions such as casting.  This function generates an
+        or used for transformation functions such as casting.  This function generates
         a Spark Struct based on the column's configuration.
 
         Passing in as_root = False does not wrap the column schema in a StructType.
@@ -192,6 +206,20 @@ class Column:
         return self.__class__(vocab_term=self.vocab_term,
                               vocab=self.vocab,
                               struct_fn=default_exception_struct_fn)
+
+    def add_struct(self, struct: Struct):
+        """
+        Add a struct which has been built independently of the schema DSL.
+        :param struct:
+        :return:
+        """
+        self.schema = struct
+        return self._callback_or_self()
+
+    def _callback_or_self(self):
+        if self.callback:
+            return self.callback
+        return self
 
     def string(self,
                term,
