@@ -23,6 +23,7 @@ class Config:
     catalogue: str
     data_product: str
     service_name: str
+    owner: str | None = None
     catalogue_mode: CatalogueMode = field(default_factory=lambda: CatalogueMode.UNITY)
     checkpoint_volume: repo.CheckpointVolumeRoot | None = None
     namespace_strategy_cls: namespace.CatalogueStrategyProtocol | None = None

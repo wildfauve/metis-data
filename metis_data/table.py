@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import partial
+
 from pyspark.sql import DataFrame
 from delta.tables import *
 
@@ -11,6 +13,10 @@ ReaderType = repo.DeltaTableReader
 WriterType = repo.DeltaTableWriter
 StreamReader = repo.SparkRecursiveFileStreamer | repo.DatabricksCloudFilesStreamer
 StreamWriter = repo.SparkStreamingTableWriter | repo.DeltaStreamingTableWriter
+
+
+def maybe_sql(session, expr):
+    return session.sql(expr)
 
 
 def init_schema_on_read(f):
@@ -33,13 +39,30 @@ def init_schema_on_read(f):
     return func
 
 
+class TableOwnershipNotSupportedBuilder:
+
+    def apply(self, spark_session, fully_qualified_table_name, owner):
+        return None
+
+
+class UnityTableOwnershipBuilder:
+
+    def apply(self, spark_session, fully_qualified_table_name, owner):
+        return (repo.set_owner_of_table(fully_qualified_table_name, owner)
+                .maybe(None, partial(maybe_sql, spark_session)))
+
+
 class CreateManagedDeltaTable:
+    def __init__(self, apply_ownership_protocol: callable = UnityTableOwnershipBuilder()):
+        self.apply_ownership_protocol = apply_ownership_protocol
+
     def perform(self, table: DomainTable):
         self._create(table.namespace.session,
                      table.schema,
                      table.fully_qualified_table_name(),
                      table.partition_on(),
-                     table.asserted_table_properties())
+                     table.asserted_table_properties(),
+                     table.owner)
         table.property_manager.invalidate_property_cache()
         pass
 
@@ -48,7 +71,8 @@ class CreateManagedDeltaTable:
                 schema,
                 fully_qualified_table_name: str,
                 partition_cols,
-                table_props: list[repo.TableProperty]):
+                table_props: list[repo.TableProperty],
+                owner: str):
 
         """
         See https://docs.delta.io/latest/api/python/spark/index.html#delta.tables.DeltaTableBuilder
@@ -68,6 +92,8 @@ class CreateManagedDeltaTable:
             for prop in table_props:
                 builder = builder.property(prop.key, prop.value)
         result = builder.execute()
+        if owner:
+            self.apply_ownership_protocol.apply(spark_session, fully_qualified_table_name, owner)
         return result
 
 
@@ -76,6 +102,7 @@ class DomainTable:
     table_name = None
     partition_columns = None
     table_properties = None
+    owner = None
     table_format = "delta"
 
     def __init__(self,
@@ -84,7 +111,7 @@ class DomainTable:
                  writer: WriterType = repo.DeltaTableWriter(),
                  stream_reader: StreamReader = repo.DeltaStreamReader(),
                  stream_writer: StreamWriter = repo.DeltaStreamingTableWriter(),
-                 table_creation_protocol=CreateManagedDeltaTable):
+                 table_creation_protocol=CreateManagedDeltaTable()):
         self.namespace = namespace
         self.reader = reader
         self.writer = writer
@@ -111,6 +138,15 @@ class DomainTable:
 
     def to_table_name(self):
         return self.fully_qualified_table_name()
+
+    # Lifecycle Events
+
+    def drop_table(self):
+        (repo.drop_table(self.fully_qualified_table_name())
+         .maybe(None, partial(maybe_sql, self.namespace.session)))
+        return self
+
+    # Reader
 
     @init_schema_on_read
     def read(self, reader_opts=None) -> DataFrame:
@@ -145,9 +181,9 @@ class DomainTable:
                 or not self.__class__.schema):
             raise error.generate_error(error.RepoConfigurationError, ("table", 2))
         if self.table_creation_protocol:
-            self.table_creation_protocol().perform(self)
+            self.table_creation_protocol.perform(self)
         else:
-            self.__class__.table_creation_protocol().perform(self)
+            self.__class__.table_creation_protocol.perform(self)
         return self
 
     def table_property_expr(self):

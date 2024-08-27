@@ -8,6 +8,23 @@ import metis_data
 
 from . import di
 
+class MockCatalogue:
+    def databaseExists(self, name):
+        return False
+
+class MockSession:
+    exprs = []
+
+    def clear(self):
+        self.exprs = []
+
+    def sql(self, expr):
+        self.exprs.append(expr)
+
+    @property
+    def catalog(self):
+        return MockCatalogue()
+
 
 @pytest.fixture
 def di_initialise_spark():
@@ -17,8 +34,8 @@ def di_initialise_spark():
 
 def create_session():
     return metis_data.build_spark_session("test_spark_session",
-                                         spark_delta_session,
-                                         spark_session_config)
+                                          spark_delta_session,
+                                          spark_session_config)
 
 
 def spark_delta_session(session_name):

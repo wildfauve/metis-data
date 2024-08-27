@@ -11,7 +11,7 @@ from . import config
 
 
 class CatalogueStrategyProtocol(Protocol):
-    def create(self, props, if_not_exists=True):
+    def create(self, props):
         ...
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -60,7 +60,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
     def maybe_sql(self, expr):
         return self.session.sql(expr)
 
-    def create(self, props, if_not_exists=True):
+    def create(self, props):
         (sql_builder.create_db(db_name=self.namespace_name,
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
@@ -130,32 +130,45 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def maybe_sql(self, expr):
         return self.session.sql(expr)
 
-    def create(self, props, if_not_exists=True):
+    def create(self, props):
         (sql_builder.create_db(db_name=self.fully_qualified_schema_name(),
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
-        logger.info(f"{self.__class__.__name__}.create : {self.fully_qualified_schema_name()}")
+        if self.cfg.owner:
+            self.set_schema_owner(self.cfg.owner)
+        # logger.info(f"{self.__class__.__name__}.create : {self.fully_qualified_schema_name()}")
         return self
 
-    def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
-        expr = sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume(checkpoint_volume.name))
-        logger.info(
-            f"{self.__class__.__name__}.create_checkpoint_volume: {expr.value}")
+    def set_schema_owner(self, owner):
+        return (sql_builder.set_owner_of_schema(db_name=self.fully_qualified_schema_name(),
+                                                owner=owner)
+                .maybe(None, self.maybe_sql))
 
-        expr.maybe(None, self.maybe_sql)
+    def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
+        (sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume(checkpoint_volume.name))
+         .maybe(None, self.maybe_sql))
+
+        self.set_volume_owner(volume=self.fully_qualified_volume_name(checkpoint_volume.name),
+                              owner=self.cfg.owner)
+
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
         """
         External volumes are only created on Databricks
         """
-        expr = sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
-                                                  volume_source.external_bucket)
-        logger.info(
-            f"{self.__class__.__name__}.create_external_volume: {expr.value}")
+        (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
+                                            volume_source.external_bucket)
+         .maybe(None, self.maybe_sql))
 
-        expr.maybe(None, self.maybe_sql)
+        self.set_volume_owner(volume=self.fully_qualified_volume_name(volume_source.name),
+                              owner=self.cfg.owner)
         return self
+
+    def set_volume_owner(self, volume, owner):
+        return (sql_builder.set_owner_of_volume(volume=volume,
+                                                owner=owner)
+                .maybe(None, self.maybe_sql))
 
     def drop(self):
         self.session.sql(f"drop database IF EXISTS {self.namespace_name} CASCADE")
@@ -184,7 +197,6 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
 
     def fully_qualified_checkpoint_volume(self, name):
         return f"{self.data_product_root}.{name}"
-
 
     def fully_qualified_schema_name(self):
         return f"{self.catalogue}.{self.namespace_name}"
@@ -231,7 +243,8 @@ class NameSpace:
     # DB LifeCycle Functions
     #
     def create_schema_if_not_exists(self):
-        self.catalogue_strategy.create(props=self.property_expr(), if_not_exists=True)
+        if not self.namespace_exists():
+            self.catalogue_strategy.create(props=self.property_expr())
 
     def drop(self):
         self.catalogue_strategy.drop()

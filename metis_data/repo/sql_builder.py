@@ -13,12 +13,50 @@ def create_db(db_name: str,
             .maybe(None, partial(db_props, db_property_expression))
             .maybe(None, maybe_joiner))
 
+
+def describe_schema(db_name: str) -> Maybe[str]:
+    """
+    This is equivalent to CREATE DATABASE.
+    """
+    return (Just([])
+            .maybe(None, partial(describe_db_base, db_name))
+            .maybe(None, maybe_joiner))
+
+
+def set_owner_of_schema(db_name: str, owner: str) -> Maybe[str]:
+    """
+    This is equivalent to CREATE DATABASE.
+    """
+    return (Just([])
+            .maybe(None, partial(alter_schema_base, db_name))
+            .maybe(None, partial(set_owner, owner))
+            .maybe(None, maybe_joiner))
+
+
+def set_owner_of_table(table_name: str, owner: str) -> Maybe[str]:
+    """
+    This is equivalent to CREATE DATABASE.
+    """
+    return (Just([])
+            .maybe(None, partial(alter_table_base, table_name))
+            .maybe(None, partial(set_owner, owner))
+            .maybe(None, maybe_joiner))
+
+
+def set_owner_of_volume(volume: str, owner: str):
+    return (Just([])
+            .maybe(None, partial(alter_volume_base, volume))
+            .maybe(None, partial(set_owner, owner))
+            .maybe(None, maybe_joiner))
+
+
 def create_managed_volume(volume_name: str) -> Maybe[str]:
     """
     """
     return (Just([])
             .maybe(None, partial(_create_managed_volume, volume_name))
             .maybe(None, maybe_joiner))
+
 
 def create_external_volume(volume_name: str,
                            volume_location: str) -> Maybe[str]:
@@ -41,6 +79,26 @@ def _create_managed_volume(name, expr) -> Maybe[list]:
 
 def with_volume_location(name, expr) -> Maybe[list]:
     return Just(expr + [f"LOCATION '{name}'"])
+
+
+def describe_db_base(db_name: str, expr) -> Maybe[list]:
+    return Just(expr + [f"DESCRIBE SCHEMA {db_name}"])
+
+
+def alter_schema_base(db_name: str, expr) -> Maybe[list]:
+    return Just(expr + [f"ALTER SCHEMA {db_name}"])
+
+
+def alter_table_base(table_name: str, expr) -> Maybe[list]:
+    return Just(expr + [f"ALTER TABLE {table_name}"])
+
+
+def alter_volume_base(volume: str, expr) -> Maybe[list]:
+    return Just(expr + [f"ALTER VOLUME {volume}"])
+
+
+def set_owner(owner_name: str, expr) -> Maybe[list]:
+    return Just(expr + [f"SET OWNER TO {owner_name}"])
 
 
 def describe_db(db_name: str) -> str:
@@ -94,8 +152,14 @@ def base_create_table(table_name: str,
     return sql
 
 
-def drop_table(table_to_drop):
-    return joiner([f"DROP TABLE IF EXISTS {table_to_drop}"])
+def drop_table(table_name):
+    return (Just([])
+            .maybe(None, partial(_drop_table, table_name))
+            .maybe(None, maybe_joiner))
+
+
+def _drop_table(name, expr) -> Maybe[list]:
+    return Just(expr + [f"DROP TABLE IF EXISTS {name}"])
 
 
 def show_properties(table_name):

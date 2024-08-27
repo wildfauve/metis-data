@@ -22,7 +22,9 @@ from .runner import (
 
 from .table import (
     CreateManagedDeltaTable,
-    DomainTable
+    DomainTable,
+    TableOwnershipNotSupportedBuilder,
+    UnityTableOwnershipBuilder
 )
 
 from .schema import (

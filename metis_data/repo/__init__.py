@@ -34,3 +34,8 @@ from .volume import (
     CheckpointVolumeRoot,
     CheckpointVolumeWithPath
 )
+
+from .sql_builder import (
+    drop_table,
+    set_owner_of_table
+)
