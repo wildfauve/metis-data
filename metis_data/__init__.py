@@ -10,6 +10,7 @@ from .namespace import (
 )
 
 from .job import (
+    InitialisationResultProtocol,
     job,
     initialiser_register,
     simple_spark_job

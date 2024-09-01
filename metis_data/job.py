@@ -1,10 +1,26 @@
-from typing import Callable
+from typing import Callable, Protocol, Any
 
 from metis_data import runner
-from metis_data.util import logger, mod, singleton
+from metis_data.util import logger, mod, singleton, monad
 
 
-def job(initialiser_module: str = None):
+class InitialisationResultProtocol(Protocol):
+    @property
+    def results(self) -> list[Any]:
+        """
+        The result collection
+        """
+        ...
+
+    def add_initialisation_result(self, result: monad.Either):
+        """
+        Appends the result emitted from the initialiser to a result collection
+        """
+        ...
+
+
+def job(initialiser_module: str = None,
+        initialisation_result_state: InitialisationResultProtocol = None):
     """
     Job provides a decorator which wraps the execution of a spark runner.  You use the decorator at the entry point of the runner
 
@@ -29,7 +45,7 @@ def job(initialiser_module: str = None):
             init_mod = kwargs.get('initialiser_module', None) or initialiser_module
             if init_mod:
                 mod.import_module(init_mod)
-                initialisation_runner()
+                initialisation_runner(initialisation_result_state)
             result = fn(*args, **kwargs)
             return result
 
@@ -92,16 +108,24 @@ def simple_spark_job(from_input: Callable,
 
 
 class Initialiser(singleton.Singleton):
-    init_fns = []
+    init_fns: list[tuple[callable, int, bool]] = []
 
     def add_initialiser(self, f, order, log_state):
         self.init_fns.append((f, order, log_state))
 
-    def invoke_fns(self):
-        [self._invoke(f, log_state) for f, _, log_state in sorted(self.init_fns, key=lambda f: f[1])]
+    def invoke_fns(self, initialisation_result_state: InitialisationResultProtocol = None):
+        [self._invoke(f, log_state, initialisation_result_state) for f, _, log_state in
+         sorted(self.init_fns, key=lambda f: f[1])]
 
-    def _invoke(self, f, log_state):
-        result = f()
+    def _invoke(self,
+                f,
+                log_state,
+                initialisation_result_state: InitialisationResultProtocol = None):
+        if initialisation_result_state:
+            result = f(initialisation_result_state)
+            initialisation_result_state.add_initialisation_result(result)
+        else:
+            result = f()
         self.log_result(f, result, log_state)
         return result
 
@@ -134,5 +158,5 @@ def initialiser_register(order: int, log_state: bool = True):
     return inner
 
 
-def initialisation_runner():
-    Initialiser().invoke_fns()
+def initialisation_runner(initialisation_result_state: InitialisationResultProtocol = None):
+    Initialiser().invoke_fns(initialisation_result_state)
