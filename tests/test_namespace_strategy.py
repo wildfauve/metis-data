@@ -1,3 +1,5 @@
+import logging
+
 import metis_data
 from tests.shared import namespaces_and_tables, spark_test_session
 
@@ -109,8 +111,10 @@ def unity_cfg():
     return metis_data.Config(catalogue="domain",
                              data_product="dp1",
                              service_name="test-runner",
+                             owner="domain-owner",
                              catalogue_mode=metis_data.CatalogueMode.UNITY,
-                             checkpoint_volume=metis_data.CheckpointVolumeRoot(name="checkpoints"))
+                             checkpoint_volume=metis_data.CheckpointVolumeRoot(name="checkpoints"),
+                             log_level=logging.DEBUG)
 
 
 def unity_cfg_with_schema_owner():
