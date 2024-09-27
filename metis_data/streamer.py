@@ -46,6 +46,11 @@ def stream_writer_error(msg, table_name, f_name):
                                 table_name=table_name,
                                 function_name=f_name)
 
+def stream_reader_error(msg):
+    return error.generate_error(error.TableStreamReadError, ("streamer", 3),
+                                msg)
+
+
 
 class StreamToPair:
 
@@ -80,7 +85,7 @@ class StreamToPair:
         self.transformed_df = self.transformer(input_df, **self.transformer_context)
 
         if not (isinstance(self.transformed_df, dataframe.DataFrame) and self.transformed_df.isStreaming):
-            return monad.Left(model_errors.dataframe_not_streaming())
+            return monad.Left(dataframe_not_streaming())
         return monad.Right(self.transformed_df)
 
     def run_stream(self):
@@ -212,7 +217,8 @@ class Runner:
                   .stream_from_table
                   .try_read_stream(val.stream_configuration.stream_from_reader_options))
         if result.is_left():
-            return monad.Left(val.replace('exception', result.error()))
+            error = stream_reader_error(result.error().message)
+            return monad.Left(val.replace('exception', error))
         if not (isinstance(result.value, dataframe.DataFrame) and result.value.isStreaming):
             return monad.Left(val.replace('exception', dataframe_not_streaming()))
         return monad.Right(val.replace('streaming_input_dataframe', result.value))
@@ -227,7 +233,7 @@ class Runner:
                    val.stream_configuration.stream_pairs]
 
         if not all(map(monad.maybe_value_ok, results)):
-            monad.Left(val.replace('exception', model_errors.dataframe_not_streaming()))
+            monad.Left(val.replace('exception', dataframe_not_streaming()))
         return monad.Right(val)
 
     def apply_transformer(self, val: StreamState) -> monad.EitherMonad[StreamState]:

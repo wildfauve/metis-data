@@ -44,7 +44,6 @@ class DeltaStreamReader:
                 .table(table_name))
 
 
-
 class SparkRecursiveFileStreamer:
     default_spark_options = [spark_util.SparkOption.RECURSIVE_LOOKUP]
 
@@ -85,12 +84,12 @@ class DatabricksCloudFilesStreamer:
     def __init__(self, spark_options: list[spark_util.SparkOption] = None):
         self.spark_options = spark_options if spark_options else []
 
-
     def read_stream(self,
                     cloud_file: metis_data.CloudFiles,
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
-        logger.debug(f"{__class__.__name__}.read_stream.  location {cloud_file.cloud_source.location} checkpoint {cloud_file.checkpoint_location}")
-
+        logger.debug(f"{__class__.__name__}.read_stream.",
+                     location=cloud_file.cloud_source.location,
+                     checkpoint=cloud_file.checkpoint_location)
         return (cloud_file.spark_session
                 .readStream
                 .format(self.__class__.format)
