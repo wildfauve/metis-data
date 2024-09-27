@@ -42,13 +42,13 @@ def dataframe_not_streaming():
 
 def stream_writer_error(msg, table_name, f_name):
     return error.generate_error(error.StreamerWriterError, ("streamer", 2),
-                                msg,
+                                cause=msg,
                                 table_name=table_name,
                                 function_name=f_name)
 
 def stream_reader_error(msg):
     return error.generate_error(error.TableStreamReadError, ("streamer", 3),
-                                msg)
+                                cause=msg)
 
 
 
