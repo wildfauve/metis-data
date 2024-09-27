@@ -5,13 +5,14 @@ from . import error_messages, monad, fn
 
 
 
-def generate_error(error_cls: Type[BaseError], msg_path: tuple[str, int], *template_args):
+def generate_error(error_cls: Type[BaseError], msg_path: tuple[str, int], *template_args, **kwargs):
     topic, _ = msg_path
     msg = fn.deep_get(error_messages.msgs, list(msg_path))
+    ctx = kwargs if kwargs else {}
     if msg:
         if len(template_args) == msg.count("{"):
-            return error_cls(msg.format(*template_args))
-        return error_cls(msg)
+            return error_cls(msg.format(*template_args), ctx=ctx)
+        return error_cls(msg, ctx=ctx)
     return error_cls("No message available")
 
 

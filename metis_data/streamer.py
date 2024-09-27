@@ -37,7 +37,14 @@ class StreamWriteType(Enum):
 
 
 def dataframe_not_streaming():
-    error.generate_error(error.RepoConfigurationError, ("streamer", 1))
+    return error.generate_error(error.RepoConfigurationError, ("streamer", 1))
+
+
+def stream_writer_error(msg, table_name, f_name):
+    return error.generate_error(error.StreamerWriterError, ("streamer", 2),
+                                msg,
+                                table_name=table_name,
+                                function_name=f_name)
 
 
 class StreamToPair:
@@ -264,5 +271,8 @@ class Runner:
                    spark_options=val.stream_configuration.stream_write_options))
 
         if result.is_left():
-            return monad.Left(val.replace('exception', result.error()))
+            error = stream_writer_error(result.error().message,
+                                        val.stream_configuration.stream_to_table.table_name,
+                                        val.stream_configuration.stream_write_type.value)
+            return monad.Left(val.replace('exception', error))
         return monad.Right(val)

@@ -14,6 +14,7 @@ Return a delta table condition that contains an identity column name (or sub col
         1: "init_schema_on_read decorated used on function which does not return a dataframe"
     },
     "streamer": {
-        1: "Stream initialisation did not return a streaming dataframe"
+        1: "Stream initialisation did not return a streaming dataframe",
+        2: "Stream Writer Error"
     }
 }
