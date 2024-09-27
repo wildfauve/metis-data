@@ -56,7 +56,7 @@ class DeltaStreamingTableWriter:
         opts = {**spark_util.SparkOption.function_based_options(self.spark_options if self.spark_options else []),
                 **{'checkpointLocation': stream_coordinator.checkpoint_location}}
 
-        logger.debug(f"{__class__.__name__}.write_stream opts {str(opts)} toTable {stream_coordinator.to_table_name}")
+        logger.debug(f"{__class__.__name__}.write_stream opts {str(opts)} toTable {stream_coordinator.to_table_name()}")
 
         streaming_query = (streaming_df.writeStream
                            .format(self.__class__.format)
