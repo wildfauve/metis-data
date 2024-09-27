@@ -42,15 +42,15 @@ def debug(msg: str,
 
 
 def maybe_debug(msg: str,
-                value: Any,
+                value: str,
                 ctx: dict | None = None,
                 tracer: Tracer | None = None,
                 status: str = 'ok') -> Just:
     """
-    Logs at DEBUG level and returns the value arg, which must be the 2nd arg, wrapped in a Just
-    Does not support **kwargs for additional context.
+    Logs at DEBUG level, including the value in the message. It then returns the value arg, which must be the 2nd arg,
+    wrapped in a Just.  Does not support **kwargs for additional context.
     """
-    _log('debug', msg, tracer, status, ctx if ctx else {})
+    _log('debug', f"{msg} : {str(value)}", tracer, status, ctx if ctx else {})
     return Just(value)
 
 
@@ -63,7 +63,7 @@ def maybe_info(msg: str,
     Logs at INFO level and returns the value arg, which must be the 2nd arg, wrapped in a Just
     Does not support **kwargs for additional context.
     """
-    _log('info', msg, tracer, status, ctx if ctx else {})
+    _log('debug', f"{msg} : {str(value)}", tracer, status, ctx if ctx else {})
     return Just(value)
 
 

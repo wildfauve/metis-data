@@ -7,8 +7,7 @@ from pyspark.sql import dataframe, types as T
 
 import metis_data
 from . import spark_util, reader_options
-
-
+from ..util import logger
 
 
 class DeltaStreamReader:
@@ -90,6 +89,8 @@ class DatabricksCloudFilesStreamer:
     def read_stream(self,
                     cloud_file: metis_data.CloudFiles,
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
+        logger.debug(f"{__class__.__name__}.read_stream.  location {cloud_file.cloud_source.location} checkpoint {cloud_file.checkpoint_location}")
+
         return (cloud_file.spark_session
                 .readStream
                 .format(self.__class__.format)

@@ -207,7 +207,7 @@ class Runner:
         if result.is_left():
             return monad.Left(val.replace('exception', result.error()))
         if not (isinstance(result.value, dataframe.DataFrame) and result.value.isStreaming):
-            return monad.Left(val.replace('exception', model_errors.dataframe_not_streaming()))
+            return monad.Left(val.replace('exception', dataframe_not_streaming()))
         return monad.Right(val.replace('streaming_input_dataframe', result.value))
 
     def transformer_strategy(self, val: StreamState) -> monad.EitherMonad[StreamState]:
@@ -229,7 +229,7 @@ class Runner:
         if result.error():
             return monad.Left(val.replace('exception', result.error()))
         if not (isinstance(result.value, dataframe.DataFrame) and result.value.isStreaming):
-            return monad.Left(val.replace('exception', model_errors.dataframe_not_streaming()))
+            return monad.Left(val.replace('exception', dataframe_not_streaming()))
         return monad.Right(val.replace('stream_transformed_dataframe', result.value))
 
     @monad.Try(error_cls=error.StreamerTransformerError)
