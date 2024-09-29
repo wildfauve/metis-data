@@ -21,21 +21,25 @@ class BaseError(Exception):
     def __init__(self,
                  message="",
                  name="",
-                 ctx={},
-                 request_kwargs: dict = {},
+                 ctx=None,
+                 request_kwargs: dict = None,
                  traceback=None,
                  code=500,
                  klass="",
-                 retryable=False):
+                 retryable=False,
+                 **kwargs):
         self.code = 500 if code is None else code
         self.retryable = retryable
         self.message = message
         self.name = name
-        self.ctx = ctx
+        self.ctx = self._merge_ctx(ctx, kwargs)
         self.klass = klass
         self.traceback = traceback
-        self.request_kwargs = request_kwargs
+        self.request_kwargs = request_kwargs if request_kwargs else {}
         super().__init__(self.message)
+
+    def _merge_ctx(self, ctx, kwargs):
+        return {**(ctx if ctx else {}), **(kwargs if kwargs else {})}
 
     def error(self):
         return {'error': self.message, 'code': self.code, 'step': self.name, 'ctx': self.ctx}

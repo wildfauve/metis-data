@@ -132,12 +132,14 @@ class Initialiser(singleton.Singleton):
     def log_result(self, f, result, log_state):
         if result.is_right():
             msg = f"Called Initialisation fn: {f.__name__} with result: OK"
+            kwargs = {}
         else:
-            status = f"fail: error: {result.error().message}"
-            msg = f"Called Initialisation fn: {f.__name__} with result: {status}"
+            error_msg = f"fail: error: {result.error().message}"
+            msg = f"Called Initialisation fn: {f.__name__} with result: {error_msg}"
+            kwargs = result.error().ctx
 
         if log_state:
-            logger.info(msg)
+            logger.info(msg, **kwargs)
 
 
 def initialiser_register(order: int, log_state: bool = True):
