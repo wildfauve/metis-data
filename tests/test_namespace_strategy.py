@@ -84,6 +84,8 @@ def test_unity_create_checkpoint_vol():
 
     assert expected_expr in sess.exprs
 
+    assert all(["OWNER" not in expr for expr in sess.exprs])
+
 
 def test_unity_create_checkpoint_vol_set_owner():
     sess = spark_test_session.MockSession()
@@ -111,7 +113,6 @@ def unity_cfg():
     return metis_data.Config(catalogue="domain",
                              data_product="dp1",
                              service_name="test-runner",
-                             owner="domain-owner",
                              catalogue_mode=metis_data.CatalogueMode.UNITY,
                              checkpoint_volume=metis_data.CheckpointVolumeRoot(name="checkpoints"),
                              log_level=logging.DEBUG)
@@ -123,4 +124,5 @@ def unity_cfg_with_schema_owner():
                              service_name="test-runner",
                              owner="domain-owner",
                              catalogue_mode=metis_data.CatalogueMode.UNITY,
-                             checkpoint_volume=metis_data.CheckpointVolumeRoot(name="checkpoints"))
+                             checkpoint_volume=metis_data.CheckpointVolumeRoot(name="checkpoints"),
+                             log_level=logging.DEBUG)

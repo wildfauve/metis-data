@@ -152,7 +152,6 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
 
         self.set_volume_owner(volume=self.fully_qualified_volume_name(checkpoint_volume.name),
                               owner=self.cfg.owner)
-
         return self
 
     def create_external_volume(self, volume_source: metis_data.S3ExternalVolumeSource):
@@ -169,6 +168,8 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         return self
 
     def set_volume_owner(self, volume, owner):
+        if not owner:
+            return None
         return (sql_builder.set_owner_of_volume(volume=volume,
                                                 owner=owner)
                 .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.set_volume_owner"))
