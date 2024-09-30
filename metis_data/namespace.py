@@ -260,6 +260,8 @@ class NameSpace:
         return self
 
     def create_checkpoint_root_volume(self):
+        if not self.cfg.checkpoint_volume:
+            return self
         self.catalogue_strategy.create_checkpoint_volume(self.cfg.checkpoint_volume)
         return self
 
