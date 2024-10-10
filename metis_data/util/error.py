@@ -118,3 +118,6 @@ class NotAStreamError(BaseError):
 
 class StreamerTransformerError(BaseError):
     ...
+
+class StreamerWriterError(BaseError):
+    ...

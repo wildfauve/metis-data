@@ -66,14 +66,11 @@ class StreamToPair:
                   table: metis_data.DomainTable,
                   write_type: StreamWriteType = StreamWriteType.APPEND,
                   options: Optional[List[metis_data.SparkOption]] = None,
-                  stream_trigger_condition: Optional[dict] = None):
+                  stream_trigger_condition: dict | None = None):
         self.stream_to_table = table
         self.stream_write_type = write_type
         self.stream_write_options = options if options else []
-        if stream_trigger_condition:
-            self.stream_trigger_condition = stream_trigger_condition
-        else:
-            self.stream_trigger_condition = repo.HiveRepo.default_stream_trigger_condition
+        self.stream_trigger_condition = stream_trigger_condition
         return self
 
     def with_transformer(self, transformer: Callable, **kwargs):
@@ -163,16 +160,13 @@ class Streamer:
                   table: metis_data.DomainTable,
                   partition_columns: Tuple[str] = tuple(),
                   write_type: StreamWriteType = StreamWriteType.APPEND,
-                  options: Optional[list[repo.SparkOption]] = [],
-                  stream_trigger_condition: Optional[dict] = None):
+                  options: list[repo.SparkOption] = None,
+                  stream_trigger_condition: dict | None = None):
         self.stream_to_table = table
         self.partition_with = partition_columns
         self.stream_write_type = write_type
-        self.stream_write_options = options
-        if stream_trigger_condition:
-            self.stream_trigger_condition = stream_trigger_condition
-        else:
-            self.stream_trigger_condition = {'once': True}
+        self.stream_write_options = options if options else []
+        self.stream_trigger_condition = stream_trigger_condition
         return self
 
     def with_transformer(self, transformer: Callable, **kwargs):

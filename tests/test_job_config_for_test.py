@@ -17,6 +17,10 @@ class MockLogger:
     def info(self, meta, msg):
         self.msgs.append((meta, msg))
 
+    def debug(self, meta, msg):
+        self.msgs.append((meta, msg))
+
+
 
 def it_create_a_job_config():
     cfg = metis_data.Config(catalogue="my_domain",
@@ -41,6 +45,7 @@ def it_supports_a_custom_logger():
                             service_name="myService",
                             log_level=logging.DEBUG,
                             logger=mock_logger)
+    assert logger.LogConfig().logger == mock_logger
 
     logger.info("a test")
 

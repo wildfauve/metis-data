@@ -123,7 +123,8 @@ def test_stream_using_streamer(di_initialise_spark,
               .stream_from(source_table,
                            stream_from_reader_options={metis_data.ReaderSwitch.READ_STREAM_WITH_SCHEMA_ON})
               .stream_to(table=stream_to_table,
-                         write_type=metis_data.StreamWriteType.APPEND)
+                         write_type=metis_data.StreamWriteType.APPEND,
+                         stream_trigger_condition={"availableNow": True})
               .with_transformer(transform_fn))
 
     result = stream.run()

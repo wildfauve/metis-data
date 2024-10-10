@@ -16,6 +16,7 @@ Return a delta table condition that contains an identity column name (or sub col
     "streamer": {
         1: "Stream initialisation did not return a streaming dataframe",
         2: "Stream Writer Error",
-        3: "Stream Read Error"
+        3: "Stream Read Error",
+        4: "Write stream called on a Streamer class {} where no streamer is configured"
     }
 }

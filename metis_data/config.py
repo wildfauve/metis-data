@@ -39,6 +39,9 @@ class Config:
         self.service_name = normalise(self.service_name)
         self.data_product = normalise(self.data_product)
         if not self.logger:
-            self.logger = logger.LogConfig().configure(level=self.log_level)
+            self.logger = logger.LogConfig()
+            self.logger.level = self.log_level
         else:
-            logger.LogConfig().configure(logger=self.logger, level=self.log_level)
+            cfg = logger.LogConfig()
+            cfg.logger = self.logger
+            cfg.level = self.log_level

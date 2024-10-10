@@ -37,7 +37,7 @@ class CloudFiles:
                  stream_reader: CloudFilesStreamReader,
                  cloud_source: S3ExternalVolumeSource,
                  schema: types.StructType,
-                 stream_writer: CloudFilesStreamWriter,
+                 stream_writer: CloudFilesStreamWriter = None,
                  stream_to_table_name: str = None,
                  stream_to_table: DomainTable = None):
         self.spark_session = spark_session
@@ -58,6 +58,14 @@ class CloudFiles:
         return self.stream_reader.read_stream(self, reader_opts)
 
     def write_stream(self, df) -> dataframe.DataFrame:
+        """
+        Cloud files can run its on streaming writes, using this function, with the caller providing the stream_to_table.
+        However, when using the generic streamer (like metis_data.streamer.Streamer), this function will not be used.
+        """
+        if not self.stream_writer:
+            raise error.generate_error(error.CloudFilesStreamingError,
+                                       ("streamer", 4),
+                                       self.__class__.__name__)
         return self.stream_writer.write_stream(df, self)
 
     def to_table_name(self):

@@ -10,13 +10,17 @@ from metis_data.util import logger
 class SparkStreamingTableWriter:
     default_stream_trigger_condition = {'availableNow': True}
 
-    def __init__(self, spark_options: list[spark_util.SparkOption] = None):
+    def __init__(self,
+                 spark_options: list[spark_util.SparkOption] = None,
+                 trigger_condition: dict = None):
         self.spark_options = spark_options if spark_options else []
+        self.trigger_condition = trigger_condition if trigger_condition else self.__class__.default_stream_trigger_condition
 
 
     def write_stream(self,
                      streaming_df,
-                     stream_coordinator):
+                     stream_coordinator,
+                     trigger_condition: dict = None):
         opts = {**spark_util.SparkOption.function_based_options(self.spark_options if self.spark_options else []),
                 **{'checkpointLocation': stream_coordinator.checkpoint_location}}
 
@@ -25,18 +29,26 @@ class SparkStreamingTableWriter:
         streaming_query = (streaming_df
                            .writeStream
                            .options(**opts)
-                           .trigger(**self.__class__.default_stream_trigger_condition)
+                           .trigger(**self.write_trigger(trigger_condition))
                            .toTable(stream_coordinator.stream_to_table_name))
         streaming_query.awaitTermination()
         return streaming_query
+
+    def write_trigger(self, write_stream_trigger):
+        if write_stream_trigger:
+            return write_stream_trigger
+        return self.trigger_condition
 
 
 class DeltaStreamingTableWriter:
     format = "delta"
     default_stream_trigger_condition = {'availableNow': True}
 
-    def __init__(self, spark_options: list[spark_util.SparkOption] = None):
+    def __init__(self,
+                 spark_options: list[spark_util.SparkOption] = None,
+                 trigger_condition: dict = None):
         self.spark_options = spark_options if spark_options else []
+        self.trigger_condition = trigger_condition if trigger_condition else self.__class__.default_stream_trigger_condition
 
     def write_stream(self,
                      streaming_df,
@@ -62,12 +74,12 @@ class DeltaStreamingTableWriter:
                            .format(self.__class__.format)
                            .outputMode("append")
                            .options(**opts)
-                           .trigger(**self._apply_trigger_condition(trigger_condition))
+                           .trigger(**self.write_trigger(trigger_condition))
                            .toTable(stream_coordinator.to_table_name()))
         streaming_query.awaitTermination()
         return streaming_query
 
-    def _apply_trigger_condition(self, trigger_condition_on_request):
-        if not trigger_condition_on_request:
-            return self.__class__.default_stream_trigger_condition
-        return trigger_condition_on_request
+    def write_trigger(self, write_stream_trigger):
+        if write_stream_trigger:
+            return write_stream_trigger
+        return self.trigger_condition

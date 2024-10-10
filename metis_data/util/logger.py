@@ -10,14 +10,15 @@ from .tracer import Tracer
 from . import json_util, singleton
 
 
-class LogConfig(singleton.Singleton):
-    level: int = logging.INFO
-    logger: Any = None
+@singleton.singleton
+class LogConfig():
+    _default_level: int = logging.INFO
 
-    def configure(self, logger: Any = None, level: int = logging.INFO):
-        self.level = level
+    def __init__(self,
+                 logger: Any = None,
+                 level: int = logging.INFO):
+        self.level = level if level else self.__class__._default_level
         self.logger = logger if logger else self._standard_logger(self.level)
-        return self
 
     def _standard_logger(self, level):
         return pino(bindings={"apptype": "prototype", "context": "main"},
@@ -137,7 +138,7 @@ def configured_logger():
     cfg = LogConfig()
     if cfg.logger:
         return cfg.logger
-    cfg.configure(level=logging.INFO)
+    cfg(level=logging.INFO)
     return cfg.logger
 
 
