@@ -40,15 +40,17 @@ def dataframe_not_streaming():
     return error.generate_error(error.RepoConfigurationError, ("streamer", 1))
 
 
-def stream_writer_error(msg, table_name, f_name):
+def stream_writer_error(exception: error.BaseError, table_name, f_name):
     return error.generate_error(error.StreamerWriterError, ("streamer", 2),
-                                cause=msg,
+                                cause=exception.message,
                                 table_name=table_name,
-                                function_name=f_name)
+                                function_name=f_name,
+                                traceback=exception.traceback)
 
-def stream_reader_error(msg):
+def stream_reader_error(exception: error.BaseError):
     return error.generate_error(error.TableStreamReadError, ("streamer", 3),
-                                cause=msg)
+                                cause=exception.message,
+                                traceback=exception.traceback)
 
 
 
@@ -211,7 +213,7 @@ class Runner:
                   .stream_from_table
                   .try_read_stream(val.stream_configuration.stream_from_reader_options))
         if result.is_left():
-            error = stream_reader_error(result.error().message)
+            error = stream_reader_error(result.error())
             return monad.Left(val.replace('exception', error))
         if not (isinstance(result.value, dataframe.DataFrame) and result.value.isStreaming):
             return monad.Left(val.replace('exception', dataframe_not_streaming()))
