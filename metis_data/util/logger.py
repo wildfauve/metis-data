@@ -10,15 +10,51 @@ from .tracer import Tracer
 from . import json_util, singleton
 
 
+class NoopLogger():
+    def __init__(self, level):
+        self.logs = []
+        self.level = level
+
+    def info(self,
+             meta,
+             msg: str) -> None:
+        if self.level >= logging.INFO:
+            self.logs.append({**{"msg": msg}, **meta})
+        pass
+
+    def warn(self,
+             meta,
+             msg: str) -> None:
+        if self.level >= logging.WARN:
+            self.logs.append({**{"msg": msg}, **meta})
+        pass
+
+    def debug(self,
+              meta,
+              msg: str) -> None:
+        if self.level >= logging.DEBUG:
+            self.logs.append({**{"msg": msg}, **meta})
+        pass
+
+
 @singleton.singleton
-class LogConfig():
+class LogConfig:
     _default_level: int = logging.INFO
 
     def __init__(self,
                  logger: Any = None,
                  level: int = logging.INFO):
+        self._setup(logger, level)
+
+    def _setup(self, logger, level):
         self.level = level if level else self.__class__._default_level
-        self.logger = logger if logger else self._standard_logger(self.level)
+        self.logger = logger if logger else self._noop_logger(self.level)
+
+    def reset(self):
+        self._setup(None, None)
+
+    def _noop_logger(self, level):
+        return NoopLogger(level)
 
     def _standard_logger(self, level):
         return pino(bindings={"apptype": "prototype", "context": "main"},
