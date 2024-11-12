@@ -53,6 +53,9 @@ class SparkRecursiveFileStreamer:
     def read_stream(self,
                     cloud_file: metis_data.CloudFiles,
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
+        logger.debug(f"{__class__.__name__}.read_stream.",
+                     location=cloud_file.cloud_source.location,
+                     checkpoint_location=cloud_file.checkpoint_location)
         return (cloud_file.spark_session
                 .readStream
                 .options(**self._spark_opts())
@@ -89,7 +92,7 @@ class DatabricksCloudFilesStreamer:
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
         logger.debug(f"{__class__.__name__}.read_stream.",
                      location=cloud_file.cloud_source.location,
-                     checkpoint=cloud_file.checkpoint_location)
+                     checkpoint_location=cloud_file.checkpoint_location)
         return (cloud_file.spark_session
                 .readStream
                 .format(self.__class__.format)

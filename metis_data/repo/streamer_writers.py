@@ -25,7 +25,6 @@ class SparkStreamingTableWriter:
                 **{'checkpointLocation': stream_coordinator.checkpoint_location}}
 
         logger.debug(f"{__class__.__name__}.write_stream opts {str(opts)} toTable {stream_coordinator.stream_to_table_name}")
-
         streaming_query = (streaming_df
                            .writeStream
                            .options(**opts)

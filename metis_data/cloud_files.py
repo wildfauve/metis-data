@@ -30,6 +30,11 @@ class S3ExternalVolumeSource:
 
 
 class CloudFiles:
+    """
+    Initialises a Cloud Files streaming source.  Cloud files can run self-contained, that is reading and writing
+    the stream, or as part of a Streamer instance, where it becomes the stream_from.  In this mode, the stream_to
+    table must be provided as it holds the checkpoint location.
+    """
 
     def __init__(self,
                  spark_session: SparkSession,
@@ -37,9 +42,9 @@ class CloudFiles:
                  stream_reader: CloudFilesStreamReader,
                  cloud_source: S3ExternalVolumeSource,
                  schema: types.StructType,
+                 stream_to_table: DomainTable,
                  stream_writer: CloudFilesStreamWriter = None,
-                 stream_to_table_name: str = None,
-                 stream_to_table: DomainTable = None):
+                 stream_to_table_name: str = None):
         self.spark_session = spark_session
         self.namespace = namespace
         self.stream_reader = stream_reader

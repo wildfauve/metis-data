@@ -152,7 +152,7 @@ class Streamer:
         self.multi = False
 
     def stream_from(self,
-                    table: metis_data.DomainTable,
+                    table: metis_data.DomainTable | metis_data.CloudFiles,
                     stream_from_reader_options: Set[repo.ReaderSwitch] = None):
         self.stream_from_table = table
         self.stream_from_reader_options = stream_from_reader_options
