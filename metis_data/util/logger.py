@@ -18,21 +18,21 @@ class NoopLogger():
     def info(self,
              meta,
              msg: str) -> None:
-        if self.level >= logging.INFO:
+        if logging.INFO >= self.level:
             self.logs.append({**{"msg": msg, "level": 'info'}, **meta})
         pass
 
     def warn(self,
              meta,
              msg: str) -> None:
-        if self.level >= logging.WARN:
+        if logging.WARN >= self.level:
             self.logs.append({**{"msg": msg, "level": 'warn'}, **meta})
         pass
 
     def debug(self,
               meta,
               msg: str) -> None:
-        if self.level >= logging.DEBUG:
+        if logging.DEBUG >= self.level:
             self.logs.append({**{"msg": msg, "level": "debug"}, **meta})
         pass
 
@@ -54,8 +54,9 @@ class LogConfig:
         self.level = level if level else self.__class__._default_level
         self.logger = logger if logger else self._noop_logger(self.level)
 
-    def reset(self):
-        self._setup(None, None)
+    def reset(self, logger=None, level=None):
+        self._setup(logger, level)
+        return self
 
     def _noop_logger(self, level):
         return NoopLogger(level)
@@ -68,71 +69,64 @@ class LogConfig:
 
 def info(msg: str,
          ctx: dict | None = None,
-         tracer: Tracer | None = None,
          status: str = 'ok',
          **kwargs) -> None:
-    _log('info', msg, tracer, status, ctx if ctx else {}, **kwargs)
+    _log('info', msg, status, ctx if ctx else {}, **kwargs)
 
 
 def debug(msg: str,
           ctx: dict | None = None,
-          tracer: Tracer | None = None,
           status: str = 'ok',
           **kwargs) -> None:
-    _log('debug', msg, tracer, status, ctx if ctx else {}, **kwargs)
+    _log('debug', msg, status, ctx if ctx else {}, **kwargs)
 
 
 def maybe_debug(msg: str,
                 value: str,
                 ctx: dict | None = None,
-                tracer: Tracer | None = None,
                 status: str = 'ok') -> Just:
     """
     Logs at DEBUG level, including the value in the message. It then returns the value arg, which must be the 2nd arg,
     wrapped in a Just.  Does not support **kwargs for additional context.
     """
-    _log('debug', f"{msg} : {str(value)}", tracer, status, ctx if ctx else {})
+    _log('debug', f"{msg} : {str(value)}", status, ctx if ctx else {})
     return Just(value)
 
 
 def maybe_info(msg: str,
                value: Any,
                ctx: dict | None = None,
-               tracer: Tracer | None = None,
                status: str = 'ok') -> Just:
     """
     Logs at INFO level and returns the value arg, which must be the 2nd arg, wrapped in a Just
     Does not support **kwargs for additional context.
     """
-    _log('debug', f"{msg} : {str(value)}", tracer, status, ctx if ctx else {})
+    _log('debug', f"{msg} : {str(value)}", status, ctx if ctx else {})
     return Just(value)
 
 
 def warn(msg: str,
          ctx: dict | None = None,
-         tracer: Tracer | None = None,
          status: str = 'ok',
          **kwargs) -> None:
-    _log('warning', msg, tracer, status, ctx if ctx else {}, **kwargs)
+    _log('warning', msg, status, ctx if ctx else {}, **kwargs)
 
 
 def error(msg: str,
           ctx: dict | None = None,
-          tracer: Tracer | None = None,
           status: str = 'ok',
           **kwargs) -> None:
-    _log('error', msg, tracer, status, ctx if ctx else {}, **kwargs)
+    _log('error', msg, status, ctx if ctx else {}, **kwargs)
 
 
 def _log(level: str,
          msg: str,
-         tracer: Any,
          status: str,
          ctx: dict[str, str],
          **kwargs) -> None:
     if level not in level_functions.keys():
         return
-    level_functions.get(level, info)(configured_logger(), msg, meta(tracer, status, ctx, **kwargs))
+    level_functions.get(level, info)(configured_logger(), msg, meta(status, ctx, **kwargs))
 
 
 def with_perf_log(perf_log_type: str = None, name: str = None):
@@ -204,15 +198,9 @@ def perf_log(fn: str, delta_t: float, callback: Callable = None):
     info("PerfLog", ctx={'fn': fn, 'delta_t': delta_t})
 
 
-def meta(tracer, status: str | int, ctx: dict, **kwargs):
-    return {**trace_meta(tracer),
-            **{'ctx': ctx},
-            **{'status': status},
+def meta(status: str | int, ctx: dict, **kwargs):
+    return {**{'ctx': ctx, 'status': status},
             **kwargs}
-
-
-def trace_meta(tracer):
-    return tracer.serialise() if tracer else {}
 
 
 level_functions = {'info': _info, 'error': _error, 'warn': _warn, 'debug': _debug}

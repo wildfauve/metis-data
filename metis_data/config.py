@@ -39,15 +39,10 @@ class Config:
         self.catalogue = normalise(self.catalogue)
         self.service_name = normalise(self.service_name)
         self.data_product = normalise(self.data_product)
-        self.log_cfg = logger.LogConfig()
-        if not self.with_logger:
-            self.log_cfg.level = self.log_level
-        else:
-            self.log_cfg.logger = self.with_logger
-            self.log_cfg.level = self.log_level
+        self.log_cfg = logger.LogConfig().reset(logger=self.with_logger, level=self.log_level)
         logger.info(f"{logging_ns}.loggingConfig",
-                    logger_cls=self.log_cfg.logger.__class__.__name__,
-                    logger_level=self.log_cfg.level)
+                    logger_cls=f"{self.log_cfg.logger.__module__}.{self.log_cfg.logger.__class__.__name__}",
+                    logger_level=logging.getLevelName(self.log_cfg.level))
 
     @property
     def configured_logger(self):
