@@ -7,7 +7,10 @@ from typing import Protocol
 import metis_data
 from metis_data.util import logger, error
 from metis_data.repo import sql_builder, properties
+from metis_data import const
 from . import config
+
+logging_ns = f"{const.NS}.namespace"
 
 
 class CatalogueStrategyProtocol(Protocol):
@@ -64,7 +67,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         (sql_builder.create_db(db_name=self.namespace_name,
                                db_property_expression=props)
          .maybe(None, self.maybe_sql))
-        logger.info(f"{self.__class__.__name__}.create: {self.namespace_name}")
+        logger.info(f"{logging_ns}.sparkCatalogueStrategy.create", namespace_name=self.namespace_name)
         return self
 
     def create_checkpoint_volume(self, checkpoint_root: metis_data.CheckpointVolumeRoot):
@@ -74,7 +77,7 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         """
         checkpoint_path = Path(checkpoint_root.path) / checkpoint_root.name
         logger.info(
-            f"{self.__class__.__name__}.create_checkpoint_volume: {str(checkpoint_path)}")
+            f"{logging_ns}.sparkCatalogueStrategy.create_checkpoint_volume: {str(checkpoint_path)}")
 
         if not checkpoint_path.exists():
             checkpoint_path.mkdir(parents=True, exist_ok=True)
@@ -85,7 +88,9 @@ class SparkCatalogueStrategy(CatalogueStrategyProtocol):
         External volumes are only created on Databricks, so this is a noop
         """
         logger.info(
-            f"{self.__class__.__name__}.create_external_volume: {self.fully_qualified_volume_name(volume_source.name)} {volume_source.location}")
+            f"{logging_ns}.sparkCatalogueStrategy.create_external_volume",
+            volume_name=self.fully_qualified_volume_name(volume_source.name),
+            volume_location=volume_source.location)
         return self
 
     def drop(self):
@@ -133,7 +138,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def create(self, props):
         (sql_builder.create_db(db_name=self.fully_qualified_schema_name(),
                                db_property_expression=props)
-         .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.create"))
+         .maybe(None, partial(logger.maybe_debug, f"{logging_ns}.unityCatalogueStrategy.create"))
          .maybe(None, self.maybe_sql))
         if self.cfg.owner:
             self.set_schema_owner(self.cfg.owner)
@@ -142,12 +147,12 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
     def set_schema_owner(self, owner):
         return (sql_builder.set_owner_of_schema(db_name=self.fully_qualified_schema_name(),
                                                 owner=owner)
-                .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.set_schema_owner"))
+                .maybe(None, partial(logger.maybe_debug, f"{logging_ns}.unityCatalogueStrategy.set_schema_owner"))
                 .maybe(None, self.maybe_sql))
 
     def create_checkpoint_volume(self, checkpoint_volume: metis_data.DeltaCheckpoint):
         (sql_builder.create_managed_volume(self.fully_qualified_checkpoint_volume(checkpoint_volume.name))
-         .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.create_checkpoint_volume"))
+         .maybe(None, partial(logger.maybe_debug, f"{logging_ns}.unityCatalogueStrategy.create_checkpoint_volume"))
          .maybe(None, self.maybe_sql))
 
         self.set_volume_owner(volume=self.fully_qualified_volume_name(checkpoint_volume.name),
@@ -160,7 +165,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
         """
         (sql_builder.create_external_volume(self.fully_qualified_volume_name(volume_source.name),
                                             volume_source.external_bucket)
-         .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.create_external_volume"))
+         .maybe(None, partial(logger.maybe_debug, f"{logging_ns}.unityCatalogueStrategy.create_external_volume"))
          .maybe(None, self.maybe_sql))
 
         self.set_volume_owner(volume=self.fully_qualified_volume_name(volume_source.name),
@@ -172,7 +177,7 @@ class UnityCatalogueStrategy(CatalogueStrategyProtocol):
             return None
         return (sql_builder.set_owner_of_volume(volume=volume,
                                                 owner=owner)
-                .maybe(None, partial(logger.maybe_debug, f"{self.__class__.__name__}.set_volume_owner"))
+                .maybe(None, partial(logger.maybe_debug, f"{logging_ns}.unityCatalogueStrategy.set_volume_owner"))
                 .maybe(None, self.maybe_sql))
 
     def drop(self):

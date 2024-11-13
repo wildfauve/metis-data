@@ -52,6 +52,7 @@ def test_cloud_files_streaming(di_initialise_spark,
     assert sketch_df.count() == 4
 
 
+
 def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
                                                dataproduct1_ns):
     sketches_table = namespaces_and_tables.my_table2_cls(streaming_table=True)(namespace=dataproduct1_ns)

@@ -6,9 +6,11 @@ from typing import Optional
 from pyspark.sql import dataframe, types as T
 
 import metis_data
+from metis_data import const
+from metis_data.util import logger
 from . import spark_util, reader_options
-from ..util import logger
 
+logging_ns = f"{const.NS}.streamReaders"
 
 class DeltaStreamReader:
 
@@ -53,7 +55,7 @@ class SparkRecursiveFileStreamer:
     def read_stream(self,
                     cloud_file: metis_data.CloudFiles,
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
-        logger.debug(f"{__class__.__name__}.read_stream.",
+        logger.debug(f"{logging_ns}.sparkFileStreamer.read_stream",
                      location=cloud_file.cloud_source.location,
                      checkpoint_location=cloud_file.checkpoint_location)
         return (cloud_file.spark_session
@@ -82,6 +84,7 @@ class DatabricksCloudFilesStreamer:
     > DatabricksCloudFilesStreamer(spark_options=opts)
     """
     format = "cloudFiles"
+    logging_ns = "metis_data.stream_readers"
     default_spark_options = []
 
     def __init__(self, spark_options: list[spark_util.SparkOption] = None):
@@ -90,7 +93,7 @@ class DatabricksCloudFilesStreamer:
     def read_stream(self,
                     cloud_file: metis_data.CloudFiles,
                     reader_options: Optional[set[reader_options.ReaderSwitch]] = None):
-        logger.debug(f"{__class__.__name__}.read_stream.",
+        logger.debug(f"{logging_ns}.cloudFilesStreamer.read_stream",
                      location=cloud_file.cloud_source.location,
                      checkpoint_location=cloud_file.checkpoint_location)
         return (cloud_file.spark_session

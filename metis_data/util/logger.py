@@ -19,22 +19,26 @@ class NoopLogger():
              meta,
              msg: str) -> None:
         if self.level >= logging.INFO:
-            self.logs.append({**{"msg": msg}, **meta})
+            self.logs.append({**{"msg": msg, "level": 'info'}, **meta})
         pass
 
     def warn(self,
              meta,
              msg: str) -> None:
         if self.level >= logging.WARN:
-            self.logs.append({**{"msg": msg}, **meta})
+            self.logs.append({**{"msg": msg, "level": 'warn'}, **meta})
         pass
 
     def debug(self,
               meta,
               msg: str) -> None:
         if self.level >= logging.DEBUG:
-            self.logs.append({**{"msg": msg}, **meta})
+            self.logs.append({**{"msg": msg, "level": "debug"}, **meta})
         pass
+
+    def pp(self):
+        logs = [json.dumps(log, indent=4) for log in self.logs]
+        print("\n".join(logs))
 
 
 @singleton.singleton

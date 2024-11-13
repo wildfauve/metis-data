@@ -1,9 +1,5 @@
 import logging
 
-import pytest
-from bevy import inject, dependency
-
-import metis_data
 from metis_data.util import logger
 
 from .shared import *
@@ -44,11 +40,11 @@ def it_supports_a_custom_logger():
                             data_product="MyDataProduct",
                             service_name="myService",
                             log_level=logging.DEBUG,
-                            logger=mock_logger)
+                            with_logger=mock_logger)
     assert logger.LogConfig().logger == mock_logger
 
     logger.info("a test")
 
-    assert len(mock_logger.msgs) == 1
+    assert len(mock_logger.msgs) == 2
 
 # Helpers
