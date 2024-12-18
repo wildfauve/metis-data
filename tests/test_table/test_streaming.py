@@ -3,6 +3,7 @@ from pathlib import Path
 from pyspark.sql.functions import col, current_timestamp, lit
 
 import metis_data
+from metis_data.util import error
 
 from tests.shared import spark_test_session, namespaces_and_tables, data
 
@@ -50,7 +51,6 @@ def test_cloud_files_streaming(di_initialise_spark,
     sketch_df = spark_test_session.spark_session().read.table('dp1.sketch')
 
     assert sketch_df.count() == 4
-
 
 
 def test_cloud_files_streaming_to_delta_append(di_initialise_spark,
@@ -145,7 +145,6 @@ def test_stream_using_streamer_with_cloud_files_source(di_initialise_spark,
     def transform_fn(df):
         return df.withColumn('onStream', lit("true"))
 
-
     opts = [metis_data.SparkOption.MERGE_SCHEMA]
 
     session = spark_test_session.spark_session()
@@ -158,7 +157,6 @@ def test_stream_using_streamer_with_cloud_files_source(di_initialise_spark,
     stream_to_table = namespaces_and_tables.MyTable2(namespace=dataproduct1_ns,
                                                      stream_writer=metis_data.DeltaStreamingTableWriter(opts))
 
-
     cloud_files = metis_data.CloudFiles(spark_session=session,
                                         namespace=dataproduct1_ns,
                                         stream_reader=metis_data.SparkRecursiveFileStreamer(),
@@ -166,9 +164,7 @@ def test_stream_using_streamer_with_cloud_files_source(di_initialise_spark,
                                         schema=namespaces_and_tables.json_file_schema,
                                         stream_to_table=stream_to_table)
 
-
     opts = [metis_data.SparkOption.MERGE_SCHEMA]
-
 
     stream = (metis_data.Streamer()
               .stream_from(cloud_files)
@@ -184,3 +180,54 @@ def test_stream_using_streamer_with_cloud_files_source(di_initialise_spark,
     df = stream_to_table.read()
 
     assert [row.onStream for row in df.select('onStream').collect()] == ['true', 'true', 'true', 'true']
+
+
+def test_stream_when_writer_throws_exception(di_initialise_spark,
+                                             dataproduct1_ns):
+    def transform_fn(df):
+        return df.withColumn('onStream', lit("true"))
+
+    class ErrorThrowingStreamWriter:
+        def __init__(self,
+                     spark_options=None,
+                     trigger_condition: dict = None):
+            pass
+
+        def write_stream(self,
+                         streaming_df,
+                         stream_coordinator,
+                         trigger_condition: dict = None,
+                         spark_options=None):
+            """
+            The Stream Coordinator is either A CloudFiles instance or a Domain Table instance.  When streaming from an
+            external file source, it will be a CloudFile.  When streaming from a Delta table, it will be a DomainTable.
+            """
+            raise Exception("BOOM!")
+
+    opts = [metis_data.SparkOption.MERGE_SCHEMA]
+
+    table_cls = namespaces_and_tables.my_table_cls()
+
+    source_table = table_cls(namespace=dataproduct1_ns,
+                             stream_reader=metis_data.DeltaStreamReader())
+
+    stream_to_table = namespaces_and_tables.MyTable2(namespace=dataproduct1_ns,
+                                                     stream_writer=ErrorThrowingStreamWriter(opts))
+    source_table.try_write_append(data.my_table_df())
+
+    stream = (metis_data.Streamer()
+              .stream_from(source_table,
+                           stream_from_reader_options={metis_data.ReaderSwitch.READ_STREAM_WITH_SCHEMA_ON})
+              .stream_to(table=stream_to_table,
+                         write_type=metis_data.StreamWriteType.APPEND,
+                         stream_trigger_condition={"availableNow": True})
+              .with_transformer(transform_fn))
+
+    result = stream.run()
+
+    assert result.is_left()
+    err = result.error().exception
+    assert isinstance(err, error.StreamerWriterError)
+    assert err.message == "Stream Writer Error"
+    assert err.ctx.get('cause') == "BOOM!"
+

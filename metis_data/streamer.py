@@ -5,9 +5,11 @@ from uuid import uuid4
 from pyspark.sql import dataframe
 
 import metis_data
-from metis_data.util import monad
+from metis_data import const
+from metis_data.util import monad, error, logger
 from metis_data import repo
-from metis_data.util import error
+
+logging_ns = f"{const.NS}.streamer"
 
 
 @dataclass
@@ -47,11 +49,11 @@ def stream_writer_error(exception: error.BaseError, table_name, f_name):
                                 function_name=f_name,
                                 traceback=exception.traceback)
 
+
 def stream_reader_error(exception: error.BaseError):
     return error.generate_error(error.TableStreamReadError, ("streamer", 3),
                                 cause=exception.message,
                                 traceback=exception.traceback)
-
 
 
 class StreamToPair:
@@ -273,7 +275,9 @@ class Runner:
                    spark_options=val.stream_configuration.stream_write_options))
 
         if result.is_left():
-            error = stream_writer_error(result.error().message,
+            logger.error(
+                f"{logging_ns}.Runner.run_and_write_streams: Error {result.error().message}")
+            error = stream_writer_error(result.error(),
                                         val.stream_configuration.stream_to_table.table_name,
                                         val.stream_configuration.stream_write_type.value)
             return monad.Left(val.replace('exception', error))

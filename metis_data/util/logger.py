@@ -36,6 +36,15 @@ class NoopLogger():
             self.logs.append({**{"msg": msg, "level": "debug"}, **meta})
         pass
 
+    def error(self,
+              meta,
+              msg: str) -> None:
+        if logging.ERROR >= self.level:
+            self.logs.append({**{"msg": msg, "level": "error"}, **meta})
+        pass
+
+
+
     def pp(self):
         logs = [json.dumps(log, indent=4) for log in self.logs]
         print("\n".join(logs))
@@ -65,6 +74,9 @@ class LogConfig:
         return pino(bindings={"apptype": "prototype", "context": "main"},
                     dump_function=custom_pino_dump_fn,
                     level=level)
+
+    def __repr__(self):
+        return f"LogConfig(logger={self.logger}, level={self.level})"
 
 
 def info(msg: str,
